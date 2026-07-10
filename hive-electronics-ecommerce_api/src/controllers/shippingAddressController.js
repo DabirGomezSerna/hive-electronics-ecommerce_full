@@ -14,6 +14,16 @@ const getShippingAddresses = async (req, res, next) => {
   }
 };
 
+const getShippingAddressesByUser = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const addresses = await ShippingAddress.find({ user: id }).populate("user");
+    res.status(200).json(addresses);
+  } catch (error) {
+    next(error);
+  }
+};
+
 const getShippingAddressById = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -70,7 +80,7 @@ const updateShippingAddress = async (req, res, next) => {
       name,
       address1,
       address2,
-      postalcode,
+      postalCode,
       city,
       country,
       reference,
@@ -83,7 +93,7 @@ const updateShippingAddress = async (req, res, next) => {
         name,
         address1,
         address2,
-        postalcode,
+        postalCode,
         city,
         country,
         reference,
@@ -120,6 +130,7 @@ const deleteShippingAddress = async (req, res, next) => {
 
 export {
   getShippingAddresses,
+  getShippingAddressesByUser,
   getShippingAddressById,
   createShippingAddress,
   updateShippingAddress,

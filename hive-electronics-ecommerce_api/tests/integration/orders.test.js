@@ -85,16 +85,19 @@ describe("GET /api/orders", () => {
 
 describe("POST /api/orders", () => {
   // TC-INT-ORD-004
-  it("TC-INT-ORD-004 — creates order and calculates totalPrice = (price * qty) + shippingCost", async () => {
+  it("TC-INT-ORD-004 — creates order and calculates totalPrice = subtotal + 16% IVA + shippingCost", async () => {
     const fixture = await buildOrderFixture();
     const res = await request(app)
       .post("/api/orders")
       .set("Authorization", `Bearer ${fixture.token}`)
       .send(orderBody(fixture));
 
-    // (99.99 * 2) + 5.00 = 204.98
+    // subtotal = 99.99 * 2 = 199.98
+    // taxAmount = parseFloat((199.98 * 0.16).toFixed(2)) = 32.00
+    // totalPrice = 199.98 + 32.00 + 5.00 = 236.98
     expect(res.status).toBe(201);
-    expect(res.body.totalPrice).toBe(204.98);
+    expect(res.body.taxAmount).toBe(32);
+    expect(res.body.totalPrice).toBe(236.98);
     expect(res.body.status).toBe("pending");
     expect(res.body.paymentStatus).toBe("pending");
   });

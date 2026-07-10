@@ -3,6 +3,7 @@ import { body, param } from "express-validator";
 import {
   getPaymentMethods,
   getPaymentMethodById,
+  getPaymentMethodsByUser,
   createPaymentMethod,
   updatePaymentMethod,
   deletePaymentMethod,
@@ -66,7 +67,21 @@ const updatePaymentValidation = [
     .withMessage("Card number must be at most 16 characters"),
 ];
 
+const userIdValidation = [
+  param("id")
+    .isMongoId()
+    .withMessage("User ID must be a valid MongoDB ObjectId"),
+];
+
 router.get("/payment-methods", authMiddleware, isAdmin, getPaymentMethods);
+
+router.get(
+  "/payment-methods/user/:id",
+  authMiddleware,
+  userIdValidation,
+  validate,
+  getPaymentMethodsByUser,
+);
 
 router.get(
   "/payment-methods/:id",

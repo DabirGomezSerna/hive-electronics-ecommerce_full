@@ -2,6 +2,7 @@ import express from "express";
 import { body, param } from "express-validator";
 import {
   getShippingAddresses,
+  getShippingAddressesByUser,
   getShippingAddressById,
   createShippingAddress,
   updateShippingAddress,
@@ -17,6 +18,12 @@ const addressIdValidation = [
   param("id")
     .isMongoId()
     .withMessage("Address ID must be a valid MongoDB ObjectId"),
+];
+
+const userIdValidation = [
+  param("id")
+    .isMongoId()
+    .withMessage("User ID must be a valid MongoDB ObjectId"),
 ];
 
 const createAddressValidation = [
@@ -49,6 +56,14 @@ const updateAddressValidation = [
 ];
 
 router.get("/addresses", authMiddleware, isAdmin, getShippingAddresses);
+
+router.get(
+  "/addresses/user/:id",
+  authMiddleware,
+  userIdValidation,
+  validate,
+  getShippingAddressesByUser,
+);
 
 router.get(
   "/addresses/:id",

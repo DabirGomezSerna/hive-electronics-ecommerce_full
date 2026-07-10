@@ -214,7 +214,7 @@ describe("PUT /api/addresses/:id", () => {
   });
 
   // TC-INT-ADDR-016
-  it("TC-INT-ADDR-016 — postalCode update is silently lost [BUG-003: controller uses postalcode not postalCode]", async () => {
+  it("TC-INT-ADDR-016 — postalCode update is applied correctly [BUG-003 RESOLVED]", async () => {
     const { user, token } = await customerSession();
     const addr = await createAddress(user._id, { postalCode: "10001" });
 
@@ -223,11 +223,10 @@ describe("PUT /api/addresses/:id", () => {
       .set("Authorization", `Bearer ${token}`)
       .send({ postalCode: "90210" });
 
-    // BUG-003: shippingAddressController.updateShippingAddress destructures
-    // `postalcode` (lowercase c) from req.body but the schema field is `postalCode`.
-    // The update is silently ignored. Original postalCode remains "10001".
+    // BUG-003 RESOLVED: shippingAddressController now correctly destructures
+    // `postalCode` (uppercase C) from req.body. The update is applied.
     expect(res.status).toBe(200);
-    expect(res.body.postalCode).toBe("10001"); // Confirms bug: value unchanged
+    expect(res.body.postalCode).toBe("90210"); // value updated correctly
   });
 
   // TC-INT-ADDR-017
@@ -272,5 +271,56 @@ describe("DELETE /api/addresses/:id", () => {
     const addr = await createAddress(user._id);
     const res = await request(app).delete(`/api/addresses/${addr._id}`);
     expect(res.status).toBe(401);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GET /api/addresses/user/:id  [AUTH ONLY — added during frontend connection]
+// ---------------------------------------------------------------------------
+
+describe("GET /api/addresses/user/:id", () => {
+  // TC-INT-ADDR-021
+  it("TC-INT-ADDR-021 — authenticated user retrieves addresses by user id", async () => {
+    const { user, token } = await customerSession();
+    await createAddress(user._id, { city: "CDMX" });
+    await createAddress(user._id, { city: "Guadalajara" });
+
+    const res = await request(app)
+      .get(`/api/addresses/user/${user._id}`)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body.length).toBe(2);
+    expect(res.body[0].user._id).toBe(user._id.toString());
+  });
+
+  // TC-INT-ADDR-022
+  it("TC-INT-ADDR-022 — returns 401 without token", async () => {
+    const { user } = await customerSession();
+    const res = await request(app).get(`/api/addresses/user/${user._id}`);
+    expect(res.status).toBe(401);
+  });
+
+  // TC-INT-ADDR-023
+  it("TC-INT-ADDR-023 — returns empty array for user with no addresses", async () => {
+    const { user, token } = await customerSession();
+
+    const res = await request(app)
+      .get(`/api/addresses/user/${user._id}`)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body.length).toBe(0);
+  });
+
+  // TC-INT-ADDR-024
+  it("TC-INT-ADDR-024 — returns 422 for non-MongoId param", async () => {
+    const { token } = await customerSession();
+    const res = await request(app)
+      .get("/api/addresses/user/not-a-valid-id")
+      .set("Authorization", `Bearer ${token}`);
+    expect(res.status).toBe(422);
   });
 });

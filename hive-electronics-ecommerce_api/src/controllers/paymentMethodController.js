@@ -121,6 +121,18 @@ const updatePaymentMethod = async (req, res, next) => {
   }
 };
 
+const getPaymentMethodsByUser = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const methods = await PaymentMethod.find({ user: id })
+      .select("-cvv")
+      .populate("user");
+    res.status(200).json(methods);
+  } catch (error) {
+    next(error);
+  }
+};
+
 const deletePaymentMethod = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -140,6 +152,7 @@ const deletePaymentMethod = async (req, res, next) => {
 export {
   getPaymentMethods,
   getPaymentMethodById,
+  getPaymentMethodsByUser,
   createPaymentMethod,
   updatePaymentMethod,
   deletePaymentMethod,

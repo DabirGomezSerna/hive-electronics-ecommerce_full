@@ -1,5 +1,7 @@
 import Order from "../models/Order.js";
 
+const TAX_RATE = 0.16;
+
 const getOrders = async (req, res, next) => {
   try {
     const orders = await Order.find();
@@ -57,23 +59,23 @@ const createOrder = async (req, res, next) => {
   try {
     const { user, products, address, paymentMethod, shippingCost } = req.body;
 
-    let total = 0;
+    let subtotal = 0;
 
     for (let i = 0; i < products.length; i++) {
-      total += products[i].price * products[i].quantity;
+      subtotal += products[i].price * products[i].quantity;
     }
 
-    total += shippingCost;
-
-    let rounedTotal = parseFloat(total.toFixed(2));
+    const taxAmount = parseFloat((subtotal * TAX_RATE).toFixed(2));
+    const totalPrice = parseFloat((subtotal + taxAmount + shippingCost).toFixed(2));
 
     const newOrder = await Order.create({
       user,
       products,
       address,
       paymentMethod,
-      totalPrice: rounedTotal,
       shippingCost,
+      taxAmount,
+      totalPrice,
     });
 
     await newOrder.populate("user");

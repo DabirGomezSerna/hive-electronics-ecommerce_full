@@ -269,3 +269,59 @@ describe("DELETE /api/payment-methods/:id", () => {
     expect(res.status).toBe(401);
   });
 });
+
+// ---------------------------------------------------------------------------
+// GET /api/payment-methods/user/:id  [AUTH ONLY — added during frontend connection]
+// ---------------------------------------------------------------------------
+
+describe("GET /api/payment-methods/user/:id", () => {
+  // TC-INT-PAY-020
+  it("TC-INT-PAY-020 — authenticated user retrieves payment methods by user id (cvv excluded)", async () => {
+    const { user, token } = await customerSession();
+    await createPaymentMethod(user._id, {
+      type: "credit_card",
+      cardNumber: "4111111111111111",
+      cvv: "123",
+    });
+    await createPaymentMethod(user._id, { type: "paypal" });
+
+    const res = await request(app)
+      .get(`/api/payment-methods/user/${user._id}`)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body.length).toBe(2);
+    expect(res.body[0].user._id).toBe(user._id.toString());
+    expect(res.body[0].cvv).toBeUndefined();
+  });
+
+  // TC-INT-PAY-021
+  it("TC-INT-PAY-021 — returns 401 without token", async () => {
+    const { user } = await customerSession();
+    const res = await request(app).get(`/api/payment-methods/user/${user._id}`);
+    expect(res.status).toBe(401);
+  });
+
+  // TC-INT-PAY-022
+  it("TC-INT-PAY-022 — returns empty array for user with no payment methods", async () => {
+    const { user, token } = await customerSession();
+
+    const res = await request(app)
+      .get(`/api/payment-methods/user/${user._id}`)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body.length).toBe(0);
+  });
+
+  // TC-INT-PAY-023
+  it("TC-INT-PAY-023 — returns 422 for non-MongoId param", async () => {
+    const { token } = await customerSession();
+    const res = await request(app)
+      .get("/api/payment-methods/user/not-a-valid-id")
+      .set("Authorization", `Bearer ${token}`);
+    expect(res.status).toBe(422);
+  });
+});

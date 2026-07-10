@@ -66,7 +66,7 @@ describe("GET /api/users/search — BUG-007", () => {
 // ---------------------------------------------------------------------------
 
 describe("POST /api/login — BUG-012", () => {
-  it("TC-DIAG-002 — JWT name field is undefined because login uses userExist.name not userExist.displayName", async () => {
+  it("TC-DIAG-002 — JWT name field contains displayName [BUG-012 RESOLVED]", async () => {
     // Register a user first
     const email = "bugtest@example.com";
     const displayName = "Bug Test User";
@@ -85,13 +85,11 @@ describe("POST /api/login — BUG-012", () => {
       Buffer.from(res.body.token.split(".")[1], "base64url").toString("utf-8"),
     );
 
-    // BUG-012: authController.login passes `userExist.name` to generateToken()
-    // but the User schema field is `displayName`, not `name`.
-    // Result: JWT contains no `name` field (undefined is omitted from JSON.stringify).
-    // Fix: change generateToken(userExist._id, userExist.name, ...) to userExist.displayName
-    expect(payload.name).toBeUndefined(); // documents the bug — should be displayName after fix
+    // BUG-012 RESOLVED: authController.login now passes `userExist.displayName`
+    // to generateToken(). The JWT name field correctly contains the user's displayName.
+    expect(payload.name).toBe(displayName);
 
-    // Role and userId ARE present (these fields come from the DB correctly)
+    // Role and userId ARE present
     expect(payload.userId).toBeDefined();
     expect(payload.role).toBe("customer");
   });

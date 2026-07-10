@@ -201,6 +201,7 @@ Base mount: `server.js` registers `app.use("/api", routes)`, and `src/routes/ind
 | PUT | `/api/carts/:id` | Yes | No | `cartController.updateCart` |
 | DELETE | `/api/carts/:id` | Yes | No | `cartController.deleteCart` |
 | GET | `/api/payment-methods` | Yes | Yes | `paymentMethodController.getPaymentMethods` |
+| GET | `/api/payment-methods/user/:id` | Yes | No | `paymentMethodController.getPaymentMethodsByUser` |
 | GET | `/api/payment-methods/:id` | Yes | Yes | `paymentMethodController.getPaymentMethodById` |
 | POST | `/api/payment-methods` | Yes | No | `paymentMethodController.createPaymentMethod` |
 | PUT | `/api/payment-methods/:id` | Yes | No | `paymentMethodController.updatePaymentMethod` |
@@ -255,7 +256,8 @@ A catch-all 404 handler is registered in `server.js` after `/api` routes, return
 - `address: ObjectId, ref "shippingAddress"`
 - `paymentMethod: ObjectId, ref "paymentMethod"`
 - `shippingCost: Number, required, default 0, min 0`
-- `totalPrice: Number, required`
+- `taxAmount: Number, required, default 0, min 0` — 16% IVA on product subtotal only (not on shipping); computed server-side in `createOrder`
+- `totalPrice: Number, required` — subtotal + taxAmount + shippingCost; computed server-side
 - `status: String, enum ["pending","processing","shipped","delivered","cancelled"], default "pending"`
 - `paymentStatus: String, enum ["pending","paid","failed","refunded"], default "pending"`
 - `{ timestamps: true }`
@@ -469,7 +471,13 @@ Reusable best-practice skill documents live under `docs/skills/`. Each file carr
 
 ---
 
-## 7. Restrictions for the agent
+## 7. Known limitations
+
+- **Client-sent `shippingCost` is trusted by the backend** — `POST /api/orders` accepts `shippingCost` from the request body and stores it without server-side validation or recomputation. The tax rate (`TAX_RATE = 0.16`) is server-authoritative, but shipping is not. A future improvement is to move shipping rate logic to the backend so the server computes the correct cost and ignores the client-sent value. Frontend constants live in `hive-electronics-ecommerce_app/src/config/pricing.js` (`SHIPPING_RATE`, `FREE_SHIPPING_THRESHOLD`).
+
+---
+
+## 8. Restrictions for the agent
 
 - Do **not** propose suggestions, improvements, refactors, or alternative architectures unless the user explicitly asks for them.
 - Do **not** list pending work, TODOs, missing features, or next steps.
