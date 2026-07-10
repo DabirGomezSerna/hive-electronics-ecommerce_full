@@ -511,6 +511,19 @@ Legend:
 
 ---
 
+## Frontend-specific: App component
+
+| ID | Scenario | Frontend unit | E2E | Priority | Status |
+|---|---|---|---|---|---|
+| UI-APP-001 | "/" renders Home inside Layout | ✅ TC-UNIT-FE-APP-001 | N/A | High | ✅ |
+| UI-APP-002 | "/cart" renders Cart | ✅ TC-UNIT-FE-APP-002 | N/A | High | ✅ |
+| UI-APP-003 | "/login" renders Login | ✅ TC-UNIT-FE-APP-003 | N/A | High | ✅ |
+| UI-APP-004 | "/checkout" renders Checkout via ProtectedRoute | ✅ TC-UNIT-FE-APP-004 | N/A | Critical | ✅ |
+| UI-APP-005 | "/order-confirmation" renders Order via ProtectedRoute | ✅ TC-UNIT-FE-APP-005 | N/A | Critical | ✅ |
+| UI-APP-006 | Unknown path renders wildcard "Page not available" | ✅ TC-UNIT-FE-APP-006 | N/A | Medium | ✅ |
+
+---
+
 ## Application infrastructure
 
 | ID | Scenario | Backend integration | Priority | Status |
@@ -531,7 +544,7 @@ Legend:
 | Frontend unit — components/pages (legacy) | 8 | 80 | 78 | 2 todo (React 19 limitation) | 0 |
 | Frontend unit — components/pages (new) | 16 | 102 | 102 | 0 | 0 |
 | E2E | 3 | 25 | — | 0 | 25 (need full stack running; FRONTEND-005 resolved) |
-| **Total** | **58** | **564** | **537** | **17** | **25** |
+| **Total** | **59** | **570** | **543** | **17** | **25** |
 
 **Backend statement coverage: 89.42%** — `app.js` now 100% statements; all 100% functions
 
@@ -551,7 +564,7 @@ Legend:
 | Checkout.jsx | 47% | **94.62% stmts / 100% funcs** | ✅ (2026-07-09) |
 | AddressList.jsx | 67% | **100%** | ✅ (2026-07-09) |
 | PaymentMethodList.jsx | 67% | **100%** | ✅ (2026-07-09) |
-| App.jsx | 0% | 0% | (router entry; low test value) |
+| App.jsx | 0% | **100%** | ✅ (2026-07-09) |
 
 **Resolved since last matrix update:**
 - BUG-003 (postalCode field) — ✅
