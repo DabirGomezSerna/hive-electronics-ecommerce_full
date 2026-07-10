@@ -445,6 +445,16 @@ Legend:
 | CTX-005 | total computed correctly | ✅ TC-UNIT-FE-039 | Critical | ✅ |
 | CTX-006 | State synced to localStorage | ✅ TC-UNIT-FE-040/041 | High | ✅ |
 | CTX-007 | useCart throws outside provider | ✅ TC-UNIT-FE-042 | High | ✅ |
+| CTX-AUTH-001 | Authenticated: initial cart fetched from GET /carts/user/:id | ✅ TC-CTX-AUTH-001 | High | ✅ |
+| CTX-AUTH-002 | Authenticated: empty cart on API fetch failure | ✅ TC-CTX-AUTH-002 | High | ✅ |
+| CTX-AUTH-003 | Authenticated: addToCart calls POST /carts/addToCart | ✅ TC-CTX-AUTH-003 | Critical | ✅ |
+| CTX-AUTH-004 | Authenticated: clearCart calls DELETE /carts/:cartId | ✅ TC-CTX-AUTH-004 | Critical | ✅ |
+| CTX-AUTH-005 | Authenticated: clearCart clears local state when cartId is null | ✅ TC-CTX-AUTH-005 | Medium | ✅ |
+| CTX-AUTH-006 | Authenticated: removeFromCart calls PUT with remaining products | ✅ TC-CTX-AUTH-006 | Critical | ✅ |
+| CTX-AUTH-007 | Authenticated: removeFromCart calls DELETE when removing last item | ✅ TC-CTX-AUTH-007 | Critical | ✅ |
+| CTX-AUTH-008 | Authenticated: updateQuantity calls PUT /carts/:cartId | ✅ TC-CTX-AUTH-008 | High | ✅ |
+| CTX-AUTH-009 | Authenticated: updateQuantity(0) delegates to removeFromCart → DELETE | ✅ TC-CTX-AUTH-009 | High | ✅ |
+| CTX-AUTH-010 | Authenticated: localStorage.cart NOT written when user is logged in | ✅ TC-CTX-AUTH-010 | High | ✅ |
 
 ---
 
@@ -468,7 +478,7 @@ Legend:
 | Frontend unit — components/pages (legacy) | 8 | 80 | 78 | 2 todo (React 19 limitation) | 0 |
 | Frontend unit — components/pages (new) | 16 | 102 | 102 | 0 | 0 |
 | E2E | 3 | 25 | — | 0 | 25 (need full stack running; FRONTEND-005 resolved) |
-| **Total** | **54** | **511** | **484** | **17** | **25** |
+| **Total** | **55** | **521** | **494** | **17** | **25** |
 
 **Backend statement coverage: 89.42%** — `app.js` now 100% statements; all 100% functions
 
@@ -484,7 +494,7 @@ Legend:
 | Header.jsx | 0% | 89.13% | ✅ |
 | Navigation.jsx | 0% | 90.62% | ✅ |
 | Cart.jsx (page) | 0% | 88.88% | ✅ |
-| CartContext.jsx | 69% | 69.04% | (needs API path tests) |
+| CartContext.jsx | 69% | **100% stmts / 93.54% branch** | ✅ (2026-07-09) |
 | Checkout.jsx | 47% | 47.31% | (complex flow) |
 | App.jsx | 0% | 0% | (router entry; low test value) |
 
