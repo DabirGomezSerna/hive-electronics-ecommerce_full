@@ -438,6 +438,39 @@ Legend:
 
 ---
 
+## Frontend-specific: AddressList component
+
+| ID | Scenario | Frontend unit | E2E | Priority | Status |
+|---|---|---|---|---|---|
+| UI-ADDRLIST-001 | Renders "Shipping addresses" heading | ✅ TC-UNIT-FE-ADDRLIST-001 | N/A | Medium | ✅ |
+| UI-ADDRLIST-002 | Renders "Add new address" button | ✅ TC-UNIT-FE-ADDRLIST-002 | N/A | High | ✅ |
+| UI-ADDRLIST-003 | Clicking "Add new address" calls onAdd | ✅ TC-UNIT-FE-ADDRLIST-003 | N/A | Critical | ✅ |
+| UI-ADDRLIST-004 | Renders AddressItem for each address in the array | ✅ TC-UNIT-FE-ADDRLIST-004 | N/A | High | ✅ |
+| UI-ADDRLIST-005 | Renders no items when addresses array is empty | ✅ TC-UNIT-FE-ADDRLIST-005 | N/A | High | ✅ |
+| UI-ADDRLIST-006 | Passes isSelected=true to the matching address | ✅ TC-UNIT-FE-ADDRLIST-006 | N/A | High | ✅ |
+| UI-ADDRLIST-007 | Passes isSelected=false to non-matching addresses | ✅ TC-UNIT-FE-ADDRLIST-007 | N/A | High | ✅ |
+| UI-ADDRLIST-008 | Passes isSelected=false to all items when selectedAddress is null | ✅ TC-UNIT-FE-ADDRLIST-008 | N/A | High | ✅ |
+| UI-ADDRLIST-009 | Uses address.name as key fallback when _id is absent | ✅ TC-UNIT-FE-ADDRLIST-009 | N/A | Medium | ✅ |
+| UI-ADDRLIST-010 | onSelect / onEdit / onDelete callbacks forwarded correctly | ✅ TC-UNIT-FE-ADDRLIST-010/011/012 | N/A | Critical | ✅ |
+
+---
+
+## Frontend-specific: PaymentMethodList component
+
+| ID | Scenario | Frontend unit | E2E | Priority | Status |
+|---|---|---|---|---|---|
+| UI-PMLIST-001 | Renders "Payment methods" heading | ✅ TC-UNIT-FE-PMLIST-001 | N/A | Medium | ✅ |
+| UI-PMLIST-002 | Renders "Add new payment method" button | ✅ TC-UNIT-FE-PMLIST-002 | N/A | High | ✅ |
+| UI-PMLIST-003 | Clicking "Add new payment method" calls onAdd | ✅ TC-UNIT-FE-PMLIST-003 | N/A | Critical | ✅ |
+| UI-PMLIST-004 | Renders PaymentMethodItem for each method in the array | ✅ TC-UNIT-FE-PMLIST-004 | N/A | High | ✅ |
+| UI-PMLIST-005 | Renders no items when methods array is empty | ✅ TC-UNIT-FE-PMLIST-005 | N/A | High | ✅ |
+| UI-PMLIST-006 | Passes isSelected=true to the matching method | ✅ TC-UNIT-FE-PMLIST-006 | N/A | High | ✅ |
+| UI-PMLIST-007 | Passes isSelected=false to non-matching methods | ✅ TC-UNIT-FE-PMLIST-007 | N/A | High | ✅ |
+| UI-PMLIST-008 | Passes isSelected=false to all items when selectedMethod is null | ✅ TC-UNIT-FE-PMLIST-008 | N/A | High | ✅ |
+| UI-PMLIST-009 | onSelect / onEdit / onDelete callbacks forwarded correctly | ✅ TC-UNIT-FE-PMLIST-009/010/011 | N/A | Critical | ✅ |
+
+---
+
 ## Frontend-specific: common components (Badge, List, Layout, Footer)
 
 | ID | Scenario | Frontend unit | E2E | Priority | Status |
@@ -498,7 +531,7 @@ Legend:
 | Frontend unit — components/pages (legacy) | 8 | 80 | 78 | 2 todo (React 19 limitation) | 0 |
 | Frontend unit — components/pages (new) | 16 | 102 | 102 | 0 | 0 |
 | E2E | 3 | 25 | — | 0 | 25 (need full stack running; FRONTEND-005 resolved) |
-| **Total** | **56** | **541** | **514** | **17** | **25** |
+| **Total** | **58** | **564** | **537** | **17** | **25** |
 
 **Backend statement coverage: 89.42%** — `app.js` now 100% statements; all 100% functions
 
@@ -516,6 +549,8 @@ Legend:
 | Cart.jsx (page) | 0% | 88.88% | ✅ |
 | CartContext.jsx | 69% | **100% stmts / 93.54% branch** | ✅ (2026-07-09) |
 | Checkout.jsx | 47% | **94.62% stmts / 100% funcs** | ✅ (2026-07-09) |
+| AddressList.jsx | 67% | **100%** | ✅ (2026-07-09) |
+| PaymentMethodList.jsx | 67% | **100%** | ✅ (2026-07-09) |
 | App.jsx | 0% | 0% | (router entry; low test value) |
 
 **Resolved since last matrix update:**
