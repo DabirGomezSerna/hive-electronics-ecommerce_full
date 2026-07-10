@@ -271,6 +271,26 @@ Legend:
 | UI-CHECKOUT-005 | Shows error when API load fails | ✅ TC-UNIT-FE-CHECKOUT-004 | N/A | High | ✅ |
 | UI-CHECKOUT-006 | Redirects to /cart when cart is empty | ✅ TC-UNIT-FE-CHECKOUT-005 | N/A | Critical | ✅ |
 | UI-CHECKOUT-007 | createOrder() called on confirm; navigates to /order-confirmation | ✅ TC-UNIT-FE-CHECKOUT-006 | ✅ TC-E2E-CHECKOUT-006 | Critical | ✅ |
+| UI-CHECKOUT-008 | Address section toggle expands list | ✅ TC-UNIT-FE-CHECKOUT-007 | N/A | High | ✅ |
+| UI-CHECKOUT-009 | Selecting address collapses section | ✅ TC-UNIT-FE-CHECKOUT-008 | N/A | High | ✅ |
+| UI-CHECKOUT-010 | Add-address button shows AddressForm (create mode) | ✅ TC-UNIT-FE-CHECKOUT-009 | N/A | High | ✅ |
+| UI-CHECKOUT-011 | Submit new address calls createShippingAddress and closes form | ✅ TC-UNIT-FE-CHECKOUT-010 | N/A | Critical | ✅ |
+| UI-CHECKOUT-012 | Cancel address form returns to list | ✅ TC-UNIT-FE-CHECKOUT-011 | N/A | Medium | ✅ |
+| UI-CHECKOUT-013 | Edit button shows AddressForm in edit mode | ✅ TC-UNIT-FE-CHECKOUT-012 | N/A | High | ✅ |
+| UI-CHECKOUT-014 | Submit edit calls updateShippingAddress and closes form | ✅ TC-UNIT-FE-CHECKOUT-013 | N/A | High | ✅ |
+| UI-CHECKOUT-015 | Delete last address sets selectedAddress to null | ✅ TC-UNIT-FE-CHECKOUT-014 | N/A | High | ✅ |
+| UI-CHECKOUT-016 | Delete selected address from multi-list selects next | ✅ TC-UNIT-FE-CHECKOUT-015 | N/A | High | ✅ |
+| UI-CHECKOUT-017 | Payment section toggle expands list | ✅ TC-UNIT-FE-CHECKOUT-016 | N/A | High | ✅ |
+| UI-CHECKOUT-018 | Selecting payment method collapses section | ✅ TC-UNIT-FE-CHECKOUT-017 | N/A | High | ✅ |
+| UI-CHECKOUT-019 | Add-payment button shows PaymentMethodForm (create mode) | ✅ TC-UNIT-FE-CHECKOUT-018 | N/A | High | ✅ |
+| UI-CHECKOUT-020 | Submit new payment calls createPaymentMethod and closes form | ✅ TC-UNIT-FE-CHECKOUT-019 | N/A | Critical | ✅ |
+| UI-CHECKOUT-021 | Cancel payment form returns to list | ✅ TC-UNIT-FE-CHECKOUT-020 | N/A | Medium | ✅ |
+| UI-CHECKOUT-022 | Edit payment button shows form in edit mode | ✅ TC-UNIT-FE-CHECKOUT-021 | N/A | High | ✅ |
+| UI-CHECKOUT-023 | Submit payment edit calls updatePaymentMethod and closes form | ✅ TC-UNIT-FE-CHECKOUT-022 | N/A | High | ✅ |
+| UI-CHECKOUT-024 | Delete payment from multi-list selects next | ✅ TC-UNIT-FE-CHECKOUT-023 | N/A | High | ✅ |
+| UI-CHECKOUT-025 | Confirm button disabled when no address selected | ✅ TC-UNIT-FE-CHECKOUT-024 | N/A | Critical | ✅ |
+| UI-CHECKOUT-026 | Confirm button disabled when no payment method selected | ✅ TC-UNIT-FE-CHECKOUT-025 | N/A | Critical | ✅ |
+| UI-CHECKOUT-027 | createOrder failure shows error message | ✅ TC-UNIT-FE-CHECKOUT-026 | N/A | Critical | ✅ |
 
 ### Order confirmation page
 
@@ -478,7 +498,7 @@ Legend:
 | Frontend unit — components/pages (legacy) | 8 | 80 | 78 | 2 todo (React 19 limitation) | 0 |
 | Frontend unit — components/pages (new) | 16 | 102 | 102 | 0 | 0 |
 | E2E | 3 | 25 | — | 0 | 25 (need full stack running; FRONTEND-005 resolved) |
-| **Total** | **55** | **521** | **494** | **17** | **25** |
+| **Total** | **56** | **541** | **514** | **17** | **25** |
 
 **Backend statement coverage: 89.42%** — `app.js` now 100% statements; all 100% functions
 
@@ -495,7 +515,7 @@ Legend:
 | Navigation.jsx | 0% | 90.62% | ✅ |
 | Cart.jsx (page) | 0% | 88.88% | ✅ |
 | CartContext.jsx | 69% | **100% stmts / 93.54% branch** | ✅ (2026-07-09) |
-| Checkout.jsx | 47% | 47.31% | (complex flow) |
+| Checkout.jsx | 47% | **94.62% stmts / 100% funcs** | ✅ (2026-07-09) |
 | App.jsx | 0% | 0% | (router entry; low test value) |
 
 **Resolved since last matrix update:**
