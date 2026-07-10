@@ -1,0 +1,59 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+:root {
+  /* Colores de la paleta */
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-strong-blue: #26336c;
+  --color-purple: #8677b5;
+  --color-pink: #d38fb9;
+  --color-yellow: #cee008;
+  --color-pale-yellow: #dde488;
+  --color-dark-yellow: #95a112;
+  --color-green: #79bf87;
+  --color-blue: #61dafb;
+  --color-red: #dc2626;
+  --color-light-gray: #ededed;
+  --color-strong-gray: #d1d2d2;
+  --color-gray: #6b7280;
+  --color-dark: #1f2937;
+  --color-darker: #111827;
+
+  /* Main theme */
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --text: #0f172a;
+  --muted: #475569;
+  --border: #cbd5e1;
+  --accent: var(--color-yellow);
+  --accent-contrast: #000000;
+  --accent-rgb: var(--color-dark-yellow);
+
+  /* Additional variables */
+  --radius: 8px;
+  --r1: 4px;
+  --r2: 6px;
+  --r3: 8px;
+  --r4: 12px;
+  --r5: 16px;
+  --gap: 16px;
+
+  /* Elevations */
+  --elev-1: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  --elev-2: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+  --elev-3: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+  --elev-4: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+  --elev-5: 0 19px 38px rgba(0, 0, 0, 0.3), 0 15px 12px rgba(0, 0, 0, 0.22);
+}

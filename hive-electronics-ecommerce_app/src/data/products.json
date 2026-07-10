@@ -1,0 +1,212 @@
+[
+  {
+    "_id": "Yt4klRMQS0kyYUlQhTyrv2",
+    "name": "RGB keyboard",
+    "description": "Keyboard with customizable RGB lights",
+    "price": 29.99,
+    "stock": 30,
+    "image": ["/img/RGB-keyboard.webp"],
+    "category": {
+      "_id": "68c396f6a24a7edc4233c9eb",
+      "name": "Keyboards",
+      "description": "Keyboards and accessories",
+      "imageURL": "https://placehold.co/800x600.png",
+      "parentCategory": {
+        "_id": "68c396f6a24a7edc4233c9e1",
+        "name": "PC peripherals",
+        "description": "PC peripherals and accessories",
+        "imageURL": "https://placehold.co/800x600.png",
+        "parentCategory": null
+      }
+    }
+  },
+  {
+    "_id": "ckFLvJ0riTu3yZpr7E1Sad",
+    "name": "RGB mouse",
+    "description": "Mouse with customizable RGB lights",
+    "price": 19.99,
+    "stock": 22,
+    "image": ["/img/RGB-mouse.webp"],
+    "category": {
+      "_id": "68c396f6a24a7edc4233c9e9",
+      "name": "Mice",
+      "description": "Mouse and accessories",
+      "imageURL": "https://placehold.co/800x600.png",
+      "parentCategory": {
+        "_id": "68c396f6a24a7edc4233c9e1",
+        "name": "PC peripherals",
+        "description": "PC peripherals and accessories",
+        "imageURL": "https://placehold.co/800x600.png",
+        "parentCategory": null
+      }
+    }
+  },
+  {
+    "_id": "RE16zWsbn2DMVUKj5oOKzh",
+    "name": "PC screen",
+    "description": "HD PC screen with blue light filter",
+    "price": 22.99,
+    "stock": 13,
+    "image": ["/img/PC-screen.webp"],
+    "category": {
+      "_id": "68c396f6a24a7edc4233c9e5",
+      "name": "Screens",
+      "description": "Screens and accessories",
+      "imageURL": "https://placehold.co/800x600.png",
+      "parentCategory": {
+        "_id": "68c396f6a24a7edc4233c9e1",
+        "name": "PC peripherals",
+        "description": "PC peripherals and accessories",
+        "imageURL": "https://placehold.co/800x600.png",
+        "parentCategory": null
+      }
+    }
+  },
+  {
+    "_id": "sdwL54nLPYRbBcRCne7vue",
+    "name": "Motherboard",
+    "description": "HEV 3.16 motherboard",
+    "price": 75.99,
+    "stock": 11,
+    "image": ["/img/motherboard.webp"],
+    "category": {
+      "_id": "68c396f6a24a7edc4233c9ef",
+      "name": "Motherboards",
+      "description": "Motherboards for PCs",
+      "imageURL": "https://placehold.co/800x600.png",
+      "parentCategory": {
+        "_id": "68c396f6a24a7edc4233c9e2",
+        "name": "PC components",
+        "description": "PC components and assorted",
+        "imageURL": "https://placehold.co/800x600.png",
+        "parentCategory": null
+      }
+    }
+  },
+  {
+    "_id": "0ZabzjHS3scIyUYXzq8P1p",
+    "name": "Graphics card Pro",
+    "description": "7th generation graphics card",
+    "price": 99.99,
+    "stock": 8,
+    "image": ["/img/graphic-card.webp"],
+    "category": {
+      "_id": "68c396f6a24a7edc4233c9eg",
+      "name": "Graphic cards",
+      "description": "Graphic cards for PCs",
+      "imageURL": "https://placehold.co/800x600.png",
+      "parentCategory": {
+        "_id": "68c396f6a24a7edc4233c9e2",
+        "name": "PC components",
+        "description": "PC components and assorted",
+        "imageURL": "https://placehold.co/800x600.png",
+        "parentCategory": null
+      }
+    }
+  },
+  {
+    "_id": "Q2erTyaCh6CaPNtKytYWy8",
+    "name": "Pro Laptop",
+    "description": "Gaming laptop with intel i7 core and high-end graphics card",
+    "price": 149.99,
+    "stock": 16,
+    "image": ["/img/laptop.webp"],
+    "category": {
+      "_id": "68c396f6a24a7edc4233c9em",
+      "name": "Laptops",
+      "description": "Gaming laptops",
+      "imageURL": "https://placehold.co/800x600.png",
+      "parentCategory": {
+        "_id": "68c396f6a24a7edc4233c9e3",
+        "name": "PC and laptops",
+        "description": "Gaming PCs and laptops",
+        "imageURL": "https://placehold.co/800x600.png",
+        "parentCategory": null
+      }
+    }
+  },
+  {
+    "_id": "CDjh0qcPatkEZODKIpT7yx",
+    "name": "Wireless keyboard",
+    "description": "Wireless USB and Bluetooth keyboard",
+    "price": 23.99,
+    "stock": 38,
+    "image": ["/img/Logitech_Wireless_Keyboard.jpg"],
+    "category": {
+      "_id": "68c396f6a24a7edc4233c9eb",
+      "name": "Keyboards",
+      "description": "Keyboards and accessories",
+      "imageURL": "https://placehold.co/800x600.png",
+      "parentCategory": {
+        "_id": "68c396f6a24a7edc4233c9e1",
+        "name": "PC peripherals",
+        "description": "PC peripherals and accessories",
+        "imageURL": "https://placehold.co/800x600.png",
+        "parentCategory": null
+      }
+    }
+  },
+  {
+    "_id": "cPqkXAjevH9stMu7oTwlTf",
+    "name": "Wireless mouse",
+    "description": "Wireless USB and Bluetooth mouse",
+    "price": 14.99,
+    "stock": 28,
+    "image": ["/img/Logitech_Wireless_Mouse.jpg"],
+    "category": {
+      "_id": "68c396f6a24a7edc4233c9e9",
+      "name": "Mice",
+      "description": "Mouse and accessories",
+      "imageURL": "https://placehold.co/800x600.png",
+      "parentCategory": {
+        "_id": "68c396f6a24a7edc4233c9e1",
+        "name": "PC peripherals",
+        "description": "PC peripherals and accessories",
+        "imageURL": "https://placehold.co/800x600.png",
+        "parentCategory": null
+      }
+    }
+  },
+  {
+    "_id": "1d3qNqamLhKBlf5imIwlCc",
+    "name": "Graphics card",
+    "description": "5th generation graphics card",
+    "price": 72.99,
+    "stock": 12,
+    "image": ["/img/Old_Graphics_Card.jpg"],
+    "category": {
+      "_id": "68c396f6a24a7edc4233c9eg",
+      "name": "Graphic cards",
+      "description": "Graphic cards for PCs",
+      "imageURL": "https://placehold.co/800x600.png",
+      "parentCategory": {
+        "_id": "68c396f6a24a7edc4233c9e2",
+        "name": "PC components",
+        "description": "PC components and assorted",
+        "imageURL": "https://placehold.co/800x600.png",
+        "parentCategory": null
+      }
+    }
+  },
+  {
+    "_id": "CXadzBNmWxsfEUkMyicVfJ",
+    "name": "Gaming laptop",
+    "description": "Gaming laptop with intel i5 core and low-end graphics card",
+    "price": 99.99,
+    "stock": 20,
+    "image": ["/img/i5_laptop.webp"],
+    "category": {
+      "_id": "68c396f6a24a7edc4233c9em",
+      "name": "Laptops",
+      "description": "Gaming laptops",
+      "imageURL": "https://placehold.co/800x600.png",
+      "parentCategory": {
+        "_id": "68c396f6a24a7edc4233c9e3",
+        "name": "PC and laptops",
+        "description": "Gaming PCs and laptops",
+        "imageURL": "https://placehold.co/800x600.png",
+        "parentCategory": null
+      }
+    }
+  }
+]

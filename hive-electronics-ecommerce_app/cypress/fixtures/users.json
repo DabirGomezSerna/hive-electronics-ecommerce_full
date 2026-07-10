@@ -1,0 +1,14 @@
+{
+  "john": {
+    "email": "john@email.com",
+    "password": "john123",
+    "displayName": "John Doe",
+    "_id": "67fc9bda370302bf46079352"
+  },
+  "jane": {
+    "email": "jane@email.com",
+    "password": "jane123",
+    "displayName": "Jane Doe",
+    "_id": "67fc9bda370302bf46079350"
+  }
+}

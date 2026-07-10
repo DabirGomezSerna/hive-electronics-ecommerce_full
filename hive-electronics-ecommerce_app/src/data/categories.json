@@ -1,0 +1,101 @@
+[
+  {
+    "_id": "68c396f6a24a7edc4233c9eb",
+    "name": "Keyboards",
+    "description": "Keyboards and accessories",
+    "imageURL": "https://placehold.co/800x600.png",
+    "parentCategory": {
+      "_id": "68c396f6a24a7edc4233c9e1",
+      "name": "PC peripherals",
+      "description": "PC peripherals and accessories",
+      "imageURL": "https://placehold.co/800x600.png",
+      "parentCategory": null
+    }
+  },
+  {
+    "_id": "68c396f6a24a7edc4233c9e9",
+    "name": "Mice",
+    "description": "Mouse and accessories",
+    "imageURL": "https://placehold.co/800x600.png",
+    "parentCategory": {
+      "_id": "68c396f6a24a7edc4233c9e1",
+      "name": "PC peripherals",
+      "description": "PC peripherals and accessories",
+      "imageURL": "https://placehold.co/800x600.png",
+      "parentCategory": null
+    }
+  },
+  {
+    "_id": "68c396f6a24a7edc4233c9e5",
+    "name": "Screens",
+    "description": "Screens and accessories",
+    "imageURL": "https://placehold.co/800x600.png",
+    "parentCategory": {
+      "_id": "68c396f6a24a7edc4233c9e1",
+      "name": "PC peripherals",
+      "description": "PC peripherals and accessories",
+      "imageURL": "https://placehold.co/800x600.png",
+      "parentCategory": null
+    }
+  },
+  {
+    "_id": "68c396f6a24a7edc4233c9ef",
+    "name": "Motherboards",
+    "description": "Motherboards for PCs",
+    "imageURL": "https://placehold.co/800x600.png",
+    "parentCategory": {
+      "_id": "68c396f6a24a7edc4233c9e2",
+      "name": "PC components",
+      "description": "PC components and assorted",
+      "imageURL": "https://placehold.co/800x600.png",
+      "parentCategory": null
+    }
+  },
+  {
+    "_id": "68c396f6a24a7edc4233c9eg",
+    "name": "Graphic cards",
+    "description": "Graphic cards for PCs",
+    "imageURL": "https://placehold.co/800x600.png",
+    "parentCategory": {
+      "_id": "68c396f6a24a7edc4233c9e2",
+      "name": "PC components",
+      "description": "PC components and assorted",
+      "imageURL": "https://placehold.co/800x600.png",
+      "parentCategory": null
+    }
+  },
+  {
+    "_id": "68c396f6a24a7edc4233c9em",
+    "name": "Laptops",
+    "description": "Gaming laptops",
+    "imageURL": "https://placehold.co/800x600.png",
+    "parentCategory": {
+      "_id": "68c396f6a24a7edc4233c9e3",
+      "name": "PC and laptops",
+      "description": "Gaming PCs and laptops",
+      "imageURL": "https://placehold.co/800x600.png",
+      "parentCategory": null
+    }
+  },
+  {
+    "_id": "68c396f6a24a7edc4233c9e1",
+    "name": "PC peripherals",
+    "description": "PC peripherals and accessories",
+    "imageURL": "https://placehold.co/800x600.png",
+    "parentCategory": null
+  },
+  {
+    "_id": "68c396f6a24a7edc4233c9e2",
+    "name": "PC components",
+    "description": "PC components and assorted",
+    "imageURL": "https://placehold.co/800x600.png",
+    "parentCategory": null
+  },
+  {
+    "_id": "68c396f6a24a7edc4233c9e3",
+    "name": "PC and laptops",
+    "description": "Gaming PCs and laptops",
+    "imageURL": "https://placehold.co/800x600.png",
+    "parentCategory": null
+  }
+]

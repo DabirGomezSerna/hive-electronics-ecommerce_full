@@ -1,0 +1,34 @@
+.payment-method-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--gap);
+  margin-bottom: var(--gap);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--surface);
+  transition: all 0.2s ease;
+}
+
+.payment-method-item:hover {
+  box-shadow: var(--elev-2);
+}
+
+.payment-method-content h4 {
+  margin: 0 0 8px 0;
+  color: #333;
+}
+
+.payment-method-content p {
+  margin: 4px 0;
+  color: #666;
+}
+
+.payment-method-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.payment-method-actions button {
+  min-width: 100px;
+}

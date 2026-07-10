@@ -1,0 +1,18 @@
+[
+  {
+    "_id": "67fc9bda370302bf46079352",
+    "displayName": "John Doe",
+    "email": "john@email.com",
+    "role": "customer",
+    "avatar": "https://cdn.jsdelivr.net/gh/faker-js/assets-person-portrait/male/512/88.jpg",
+    "isActive": true
+  },
+  {
+    "_id": "67fc9bda370302bf46079350",
+    "displayName": "Jane Doe",
+    "email": "jane@email.com",
+    "role": "customer",
+    "avatar": "https://cdn.jsdelivr.net/gh/faker-js/assets-person-portrait/female/512/80.jpg",
+    "isActive": true
+  }
+]
