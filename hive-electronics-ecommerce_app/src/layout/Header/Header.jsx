@@ -30,7 +30,7 @@ export default function Header() {
     updateAuthState();
 
     return () => {
-      window.addEventListener("storage", updateAuthState);
+      window.removeEventListener("storage", updateAuthState);
     };
   }, []);
 

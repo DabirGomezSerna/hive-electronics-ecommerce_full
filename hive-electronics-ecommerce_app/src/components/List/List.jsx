@@ -13,23 +13,25 @@ export default function List({
       </div>
       {layout === "grid" ? (
         <div className="list-grid">
-          {products.map((product) => (
+          {products.map((product, index) => (
             <ProductCard
               key={product._id}
               product={product}
               orientation="vertical"
               className="list-item"
+              index={index}
             />
           ))}
         </div>
       ) : (
         <div className="list-vertical">
-          {products.map((product) => (
+          {products.map((product, index) => (
             <ProductCard
               key={product._id}
               product={product}
               orientation="horizontal"
               className="list-item"
+              index={index}
             />
           ))}
         </div>

@@ -1,10 +1,11 @@
+import { memo } from "react";
 import { Link } from "react-router-dom";
-import { useCart } from "../../context/CartContext";
+import { useCartActions } from "../../context/CartContext";
 import Button from "../common/Button";
 import "./ProductCard.css";
 
-export default function ProductCard({ product, orientation = "vertical" }) {
-  const { addToCart } = useCart();
+function ProductCard({ product, orientation = "vertical", index = 0 }) {
+  const { addToCart } = useCartActions();
   const { name, price, stock, image, description } = product || {};
 
   if (!product) {
@@ -29,6 +30,7 @@ export default function ProductCard({ product, orientation = "vertical" }) {
           src={image ? image[0] : "/img/products/placeholder.svg"}
           alt={name}
           className="product-card-image"
+          loading={index < 4 ? "eager" : "lazy"}
           onError={(event) => {
             event.target.src = "/img/products/placeholder.svg";
           }}
@@ -71,3 +73,5 @@ export default function ProductCard({ product, orientation = "vertical" }) {
     </div>
   );
 }
+
+export default memo(ProductCard);

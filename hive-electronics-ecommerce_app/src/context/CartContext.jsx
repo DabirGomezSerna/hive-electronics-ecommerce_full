@@ -1,8 +1,12 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import apiClient from "../services/apiClient";
 import { getCurrentUser } from "../services/userServices";
 
 const CartContext = createContext();
+// Separate context carrying only the stable addToCart reference, so components
+// that don't display cart contents (e.g. ProductCard) don't re-render on every
+// cart change — only on changes to their own props.
+const CartActionsContext = createContext();
 
 const transformCart = (cart) =>
   cart.products.map(({ product, quantity }) => ({ ...product, quantity }));
@@ -37,7 +41,7 @@ export function CartProvider({ children }) {
     }
   }, [cartItems]);
 
-  const addToCart = async (product, quantity = 1) => {
+  const addToCart = useCallback(async (product, quantity = 1) => {
     const user = getCurrentUser();
     if (!user) {
       setCartItems((prev) => {
@@ -58,9 +62,9 @@ export function CartProvider({ children }) {
     });
     setCartId(cart._id);
     setCartItems(transformCart(cart));
-  };
+  }, []);
 
-  const clearCart = async () => {
+  const clearCart = useCallback(async () => {
     const user = getCurrentUser();
     if (!user || !cartId) {
       setCartItems([]);
@@ -70,9 +74,9 @@ export function CartProvider({ children }) {
     await apiClient(`/carts/${cartId}`, { method: "DELETE" });
     setCartId(null);
     setCartItems([]);
-  };
+  }, [cartId]);
 
-  const removeFromCart = async (productId) => {
+  const removeFromCart = useCallback(async (productId) => {
     const user = getCurrentUser();
     if (!user) {
       setCartItems((prev) => prev.filter((i) => i._id !== productId));
@@ -94,9 +98,9 @@ export function CartProvider({ children }) {
     });
     setCartId(cart._id);
     setCartItems(transformCart(cart));
-  };
+  }, [cartItems, cartId, clearCart]);
 
-  const updateQuantity = async (productId, newQuantity) => {
+  const updateQuantity = useCallback(async (productId, newQuantity) => {
     if (newQuantity <= 0) {
       await removeFromCart(productId);
       return;
@@ -123,30 +127,53 @@ export function CartProvider({ children }) {
     });
     setCartId(cart._id);
     setCartItems(transformCart(cart));
-  };
+  }, [cartItems, cartId, removeFromCart]);
 
-  const getTotalItems = () =>
-    cartItems.reduce((total, item) => total + item.quantity, 0);
+  const getTotalItems = useCallback(
+    () => cartItems.reduce((total, item) => total + item.quantity, 0),
+    [cartItems]
+  );
 
-  const getTotalPrice = () =>
-    cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+  const getTotalPrice = useCallback(
+    () => cartItems.reduce((total, item) => total + item.price * item.quantity, 0),
+    [cartItems]
+  );
 
-  const value = {
-    cartItems,
-    total: getTotalPrice(),
-    addToCart,
-    removeFromCart,
-    updateQuantity,
-    clearCart,
-    getTotalItems,
-    getTotalPrice,
-  };
+  const value = useMemo(
+    () => ({
+      cartItems,
+      total: getTotalPrice(),
+      addToCart,
+      removeFromCart,
+      updateQuantity,
+      clearCart,
+      getTotalItems,
+      getTotalPrice,
+    }),
+    [cartItems, addToCart, removeFromCart, updateQuantity, clearCart, getTotalItems, getTotalPrice]
+  );
 
-  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
+  // addToCart never changes identity (see its useCallback deps above), so this
+  // value is created once and never triggers a re-render in its consumers.
+  const actionsValue = useMemo(() => ({ addToCart }), [addToCart]);
+
+  return (
+    <CartActionsContext.Provider value={actionsValue}>
+      <CartContext.Provider value={value}>{children}</CartContext.Provider>
+    </CartActionsContext.Provider>
+  );
 }
 
 export function useCart() {
   const context = useContext(CartContext);
   if (!context) throw new Error("useCart must be used within CartProvider");
+  return context;
+}
+
+// For components that only need to add a product to the cart (e.g. ProductCard,
+// ProductDetails) — avoids re-rendering when cartItems/total change elsewhere.
+export function useCartActions() {
+  const context = useContext(CartActionsContext);
+  if (!context) throw new Error("useCartActions must be used within CartProvider");
   return context;
 }

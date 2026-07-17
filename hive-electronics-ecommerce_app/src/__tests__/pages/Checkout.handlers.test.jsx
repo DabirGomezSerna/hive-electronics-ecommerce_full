@@ -253,7 +253,7 @@ describe('Checkout — add new address', () => {
 
     fireEvent.click(screen.getByText('add-address'));
 
-    expect(screen.getByTestId('address-form')).toBeInTheDocument();
+    expect(await screen.findByTestId('address-form')).toBeInTheDocument();
     expect(screen.getByTestId('addr-form-mode')).toHaveTextContent('create');
   });
 
@@ -376,7 +376,7 @@ describe('Checkout — add new payment method', () => {
 
     fireEvent.click(screen.getByText('add-payment'));
 
-    expect(screen.getByTestId('payment-form')).toBeInTheDocument();
+    expect(await screen.findByTestId('payment-form')).toBeInTheDocument();
     expect(screen.getByTestId('pm-form-mode')).toHaveTextContent('create');
   });
 
@@ -489,5 +489,111 @@ describe('Checkout — order creation edge cases', () => {
       expect(screen.getByTestId('error-msg')).toBeInTheDocument();
     });
     expect(mockNavigate).not.toHaveBeenCalledWith('/order-confirmation', expect.anything());
+  });
+});
+
+// ── getPaymentSummary branches ────────────────────────────────────────────────
+// Lines 45-46 of Checkout.jsx are hit when the collapsed payment section renders
+// summaryContent with a paypal or bank_transfer type payment selected.
+
+describe('Checkout — getPaymentSummary display', () => {
+  it('TC-UNIT-FE-CHECKOUT-027 — paypal type shows paypalEmail in collapsed summary', async () => {
+    getPaymentMethods.mockResolvedValue([
+      { _id: 'pm-pp', type: 'paypal', paypalEmail: 'user@paypal.com', isDefault: true },
+    ]);
+
+    renderCheckout();
+    await waitForLoad();
+
+    // Section is collapsed (default method exists) → summaryContent rendered
+    expect(screen.getByText('user@paypal.com')).toBeInTheDocument();
+  });
+
+  it('TC-UNIT-FE-CHECKOUT-028 — bank_transfer type shows bankName in collapsed summary', async () => {
+    getPaymentMethods.mockResolvedValue([
+      { _id: 'pm-bk', type: 'bank_transfer', bankName: 'BBVA', isDefault: true },
+    ]);
+
+    renderCheckout();
+    await waitForLoad();
+
+    expect(screen.getByText('BBVA')).toBeInTheDocument();
+  });
+});
+
+// ── Error-catch branches ──────────────────────────────────────────────────────
+// Each handler wraps its API call in try/catch. When the API rejects, the
+// catch block runs (console.error) but local state is still updated.
+
+describe('Checkout — API error-catch branches', () => {
+  it('TC-UNIT-FE-CHECKOUT-029 — handleAddressDelete: API failure still removes address locally', async () => {
+    getShippingAddresses.mockResolvedValue([ADDR1, ADDR2]);
+    deleteShippingAddress.mockRejectedValue(new Error('Network error'));
+
+    renderCheckout();
+    await openAddrSection();
+
+    fireEvent.click(screen.getByText('delete-a1'));
+
+    // State update (filter) runs outside try/catch, so ADDR1 is removed locally
+    await waitFor(() => {
+      expect(screen.queryByTestId('addr-item-a1')).not.toBeInTheDocument();
+    });
+    expect(screen.getByTestId('addr-item-a2')).toBeInTheDocument();
+  });
+
+  it('TC-UNIT-FE-CHECKOUT-030 — handleAddressSubmit: create failure leaves form open', async () => {
+    createShippingAddress.mockRejectedValue(new Error('Save failed'));
+
+    renderCheckout();
+    await openAddrSection();
+    fireEvent.click(screen.getByText('add-address'));
+    fireEvent.click(screen.getByText('submit-addr-form'));
+
+    // setShowAddressForm(false) is inside try, never reached — form stays open
+    await waitFor(() => expect(createShippingAddress).toHaveBeenCalled());
+    expect(screen.getByTestId('address-form')).toBeInTheDocument();
+  });
+
+  it('TC-UNIT-FE-CHECKOUT-031 — handlePaymentDelete: API failure still removes method locally', async () => {
+    getPaymentMethods.mockResolvedValue([PM1, PM2]);
+    deletePaymentMethod.mockRejectedValue(new Error('Network error'));
+
+    renderCheckout();
+    await openPaySection();
+
+    fireEvent.click(screen.getByText('delete-pm1'));
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pm-item-pm1')).not.toBeInTheDocument();
+    });
+    expect(screen.getByTestId('pm-item-pm2')).toBeInTheDocument();
+  });
+
+  it('TC-UNIT-FE-CHECKOUT-032 — handlePaymentDelete: deleting the only selected method sets selection to null', async () => {
+    // PM1 is the only method and is selected (isDefault: true)
+    renderCheckout();
+    await openPaySection();
+
+    fireEvent.click(screen.getByText('delete-pm1'));
+
+    // selectedPaymentMethod → null → paymentSectionOpen becomes true → list visible
+    await waitFor(() => {
+      expect(screen.queryByTestId('pm-item-pm1')).not.toBeInTheDocument();
+    });
+    // Section is now expanded (selectedMethod is null) showing empty list
+    expect(screen.getByTestId('payment-list')).toBeInTheDocument();
+  });
+
+  it('TC-UNIT-FE-CHECKOUT-033 — handlePaymentSubmit: create failure leaves form open', async () => {
+    createPaymentMethod.mockRejectedValue(new Error('Payment API error'));
+
+    renderCheckout();
+    await openPaySection();
+    fireEvent.click(screen.getByText('add-payment'));
+    fireEvent.click(screen.getByText('submit-pm-form'));
+
+    await waitFor(() => expect(createPaymentMethod).toHaveBeenCalled());
+    expect(screen.getByTestId('payment-form')).toBeInTheDocument();
   });
 });

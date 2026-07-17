@@ -1,6 +1,6 @@
 # Test Matrix — Hive Electronics Ecommerce (Full Stack)
 
-**Last updated:** 2026-07-08  
+**Last updated:** 2026-07-15  
 **Total tests:** 400+ (growing — new page/component/layout tests added; FRONTEND-005 resolved)
 
 Legend:
@@ -255,6 +255,11 @@ Legend:
 | API-004 | Returns null on 204 No Content | ✅ TC-UNIT-FE-API-004 | High | ✅ |
 | API-005 | Clears localStorage and redirects on 401 | ✅ TC-UNIT-FE-API-005 | Critical | ✅ |
 | API-006 | Throws error on non-ok response | ✅ TC-UNIT-FE-API-006 | High | ✅ |
+| API-007 | GET requests to the same path are served from an in-memory cache (60s TTL) | ✅ TC-UNIT-FE-API-008 | High | ✅ |
+| API-008 | Cache is keyed per-path — a different path is not served from another path's cache | ✅ TC-UNIT-FE-API-009 | Medium | ✅ |
+| API-009 | Non-GET requests (POST/PUT/DELETE) are never cached | ✅ TC-UNIT-FE-API-010 | Critical | ✅ |
+| API-010 | Cached GET entry expires after the TTL and triggers a fresh fetch | ✅ TC-UNIT-FE-API-011 | High | ✅ |
+| API-011 | clearApiCache() forces a fresh fetch on the next GET | ✅ TC-UNIT-FE-API-012 | Medium | ✅ |
 
 ---
 
@@ -291,6 +296,13 @@ Legend:
 | UI-CHECKOUT-025 | Confirm button disabled when no address selected | ✅ TC-UNIT-FE-CHECKOUT-024 | N/A | Critical | ✅ |
 | UI-CHECKOUT-026 | Confirm button disabled when no payment method selected | ✅ TC-UNIT-FE-CHECKOUT-025 | N/A | Critical | ✅ |
 | UI-CHECKOUT-027 | createOrder failure shows error message | ✅ TC-UNIT-FE-CHECKOUT-026 | N/A | Critical | ✅ |
+| UI-CHECKOUT-028 | paypal type shows paypalEmail in collapsed payment summary | ✅ TC-UNIT-FE-CHECKOUT-027 | N/A | Medium | ✅ |
+| UI-CHECKOUT-029 | bank_transfer type shows bankName in collapsed payment summary | ✅ TC-UNIT-FE-CHECKOUT-028 | N/A | Medium | ✅ |
+| UI-CHECKOUT-030 | deleteShippingAddress API failure: address still removed locally | ✅ TC-UNIT-FE-CHECKOUT-029 | N/A | High | ✅ |
+| UI-CHECKOUT-031 | handleAddressSubmit create failure: form stays open | ✅ TC-UNIT-FE-CHECKOUT-030 | N/A | High | ✅ |
+| UI-CHECKOUT-032 | deletePaymentMethod API failure: method still removed locally | ✅ TC-UNIT-FE-CHECKOUT-031 | N/A | High | ✅ |
+| UI-CHECKOUT-033 | Deleting the only selected payment method sets selection to null | ✅ TC-UNIT-FE-CHECKOUT-032 | N/A | High | ✅ |
+| UI-CHECKOUT-034 | handlePaymentSubmit create failure: form stays open | ✅ TC-UNIT-FE-CHECKOUT-033 | N/A | High | ✅ |
 
 ### Order confirmation page
 
@@ -508,6 +520,9 @@ Legend:
 | CTX-AUTH-008 | Authenticated: updateQuantity calls PUT /carts/:cartId | ✅ TC-CTX-AUTH-008 | High | ✅ |
 | CTX-AUTH-009 | Authenticated: updateQuantity(0) delegates to removeFromCart → DELETE | ✅ TC-CTX-AUTH-009 | High | ✅ |
 | CTX-AUTH-010 | Authenticated: localStorage.cart NOT written when user is logged in | ✅ TC-CTX-AUTH-010 | High | ✅ |
+| CTX-ACTIONS-001 | Components using only useCartActions() do not re-render when cartItems/total change elsewhere (regression test for a ProductCard re-render bug found via React Profiler — see 2026-07-15 entry below) | ✅ TC-CTX-ACTIONS-001 | High | ✅ |
+| CTX-ACTIONS-002 | addToCart reference is stable (same identity) across cart-changing re-renders | ✅ TC-CTX-ACTIONS-002 | High | ✅ |
+| CTX-ACTIONS-003 | useCartActions() throws when used outside CartProvider | ✅ TC-CTX-ACTIONS-003 | Medium | ✅ |
 
 ---
 
@@ -540,11 +555,11 @@ Legend:
 |---|---|---|---|---|---|
 | Backend unit | 10 | 55 | 55 | 0 | 0 |
 | Backend integration | 10 | 189 | 189 | 15 (assert known behavior) | 0 |
-| Frontend unit — service layer | 7 | 60 | 60 | 0 | 0 |
-| Frontend unit — components/pages (legacy) | 8 | 80 | 78 | 2 todo (React 19 limitation) | 0 |
+| Frontend unit — service layer | 7 | 65 | 65 | 0 | 0 |
+| Frontend unit — components/pages (legacy) | 8 | 83 | 81 | 2 todo (React 19 limitation) | 0 |
 | Frontend unit — components/pages (new) | 16 | 102 | 102 | 0 | 0 |
 | E2E | 3 | 25 | — | 0 | 25 (need full stack running; FRONTEND-005 resolved) |
-| **Total** | **59** | **570** | **543** | **17** | **25** |
+| **Total** | **59** | **585** | **558** | **17** | **25** |
 
 **Backend statement coverage: 89.42%** — `app.js` now 100% statements; all 100% functions
 
@@ -561,7 +576,7 @@ Legend:
 | Navigation.jsx | 0% | 90.62% | ✅ |
 | Cart.jsx (page) | 0% | 88.88% | ✅ |
 | CartContext.jsx | 69% | **100% stmts / 93.54% branch** | ✅ (2026-07-09) |
-| Checkout.jsx | 47% | **94.62% stmts / 100% funcs** | ✅ (2026-07-09) |
+| Checkout.jsx | 47% | **98.92% stmts / 87.03% branch / 100% funcs** | ✅ (2026-07-14) |
 | AddressList.jsx | 67% | **100%** | ✅ (2026-07-09) |
 | PaymentMethodList.jsx | 67% | **100%** | ✅ (2026-07-09) |
 | App.jsx | 0% | **100%** | ✅ (2026-07-09) |
@@ -572,3 +587,9 @@ Legend:
 - FRONTEND-005 (Cypress btoa token) — ✅
 - SVC-USR-001/002/003 stale tests — ✅ rewritten
 - SVC-PROD-001/002/003/004/005 stale tests — ✅ rewritten
+
+**2026-07-15 — Performance optimization pass (frontend):**
+- Added route-level (`App.jsx`) and component-level (`Checkout.jsx` address/payment forms) code splitting via `React.lazy`/`Suspense`. `App.test.jsx` and `Checkout.handlers.test.jsx` updated to await async-resolved lazy components (`findByTestId`); no scenario coverage changed, same test IDs.
+- Added an in-memory GET cache (60s TTL) to `apiClient.js` — new coverage: API-007 through API-011.
+- Split `CartContext` into `useCart()` (unchanged) and a new `useCartActions()` for components that only need `addToCart` (`ProductCard`, `ProductDetails`). This was a direct fix for a re-render bug confirmed via React Profiler against a live backend: adding one item to the cart was re-rendering all 18 visible `ProductCard`s before the fix, 0 after — new coverage: CTX-ACTIONS-001 through CTX-ACTIONS-003.
+- `ProductDetails.test.jsx`'s `CartContext` mock updated to also stub `useCartActions`.

@@ -6,9 +6,9 @@
  * CartProvider reads / writes localStorage on every state change.
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
-import { CartProvider, useCart } from '../../context/CartContext';
+import { CartProvider, useCart, useCartActions } from '../../context/CartContext';
 
 // ── test consumer ─────────────────────────────────────────────────────────────
 const PRODUCTS = [
@@ -227,6 +227,70 @@ describe('useCart() — guard', () => {
     // Suppress React's error boundary console output
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
     expect(() => render(<Bare />)).toThrow('useCart must be used within CartProvider');
+    spy.mockRestore();
+  });
+});
+
+// ── useCartActions() ──────────────────────────────────────────────────────────
+// Regression coverage for the ProductCard re-render issue found via React
+// Profiler: components that only need addToCart must not re-render when
+// cartItems/total change elsewhere (see docs/testing/test-matrix.md CTX-ACTIONS).
+describe('CartContext — useCartActions()', () => {
+  it('TC-CTX-ACTIONS-001 — components using only useCartActions() do not re-render when cart items change', () => {
+    let renderCount = 0;
+    function ActionsOnlyConsumer() {
+      useCartActions();
+      renderCount += 1;
+      return null;
+    }
+    function Trigger() {
+      const { addToCart } = useCart();
+      return <button onClick={() => addToCart(PRODUCTS[0], 1)}>trigger-add</button>;
+    }
+
+    render(
+      <CartProvider>
+        <ActionsOnlyConsumer />
+        <Trigger />
+      </CartProvider>
+    );
+    expect(renderCount).toBe(1);
+
+    fireEvent.click(screen.getByText('trigger-add'));
+    expect(renderCount).toBe(1);
+  });
+
+  it('TC-CTX-ACTIONS-002 — addToCart reference is stable across cart-changing re-renders', () => {
+    const seenReferences = new Set();
+    function ActionsConsumer() {
+      const { addToCart } = useCartActions();
+      seenReferences.add(addToCart);
+      return null;
+    }
+    function Trigger() {
+      const { addToCart } = useCart();
+      return <button onClick={() => addToCart(PRODUCTS[0], 1)}>trigger-add</button>;
+    }
+
+    render(
+      <CartProvider>
+        <ActionsConsumer />
+        <Trigger />
+      </CartProvider>
+    );
+    fireEvent.click(screen.getByText('trigger-add'));
+
+    expect(seenReferences.size).toBe(1);
+  });
+
+  it('TC-CTX-ACTIONS-003 — throws when used outside CartProvider', () => {
+    function Bare() {
+      useCartActions();
+      return null;
+    }
+
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    expect(() => render(<Bare />)).toThrow('useCartActions must be used within CartProvider');
     spy.mockRestore();
   });
 });

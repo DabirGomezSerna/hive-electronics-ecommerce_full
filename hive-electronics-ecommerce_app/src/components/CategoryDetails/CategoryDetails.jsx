@@ -82,12 +82,13 @@ export default function CategoryDetails({ categoryId }) {
         </div>
         {products.length > 0 ? (
           <div className="category-products-grid">
-            {products.map((product) => (
+            {products.map((product, index) => (
               <ProductCard
                 key={product._id}
                 product={product}
                 orientation="vertical"
                 className="card"
+                index={index}
               />
             ))}
           </div>

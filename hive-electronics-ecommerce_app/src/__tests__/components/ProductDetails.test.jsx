@@ -29,10 +29,11 @@ vi.mock('../../services/productServices', () => ({
 vi.mock('../../context/CartContext', () => ({
   CartProvider: ({ children }) => children,
   useCart: vi.fn(),
+  useCartActions: vi.fn(),
 }));
 
 import { getProductById } from '../../services/productServices';
-import { useCart } from '../../context/CartContext';
+import { useCart, useCartActions } from '../../context/CartContext';
 import ProductDetails from '../../components/ProductDetails/ProductDetails';
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -69,6 +70,7 @@ describe('ProductDetails — loading state', () => {
   it('TC-UNIT-FE-PRODDET-001 — shows loading spinner before data resolves', () => {
     // Arrange — never-resolving promise so loading stays true
     useCart.mockReturnValue(mockUseCart);
+    useCartActions.mockReturnValue({ addToCart: mockUseCart.addToCart });
     getProductById.mockReturnValue(new Promise(() => {}));
 
     // Act
@@ -82,6 +84,7 @@ describe('ProductDetails — loading state', () => {
 describe('ProductDetails — successful product load', () => {
   beforeEach(() => {
     useCart.mockReturnValue(mockUseCart);
+    useCartActions.mockReturnValue({ addToCart: mockUseCart.addToCart });
     getProductById.mockResolvedValue(mockProduct);
   });
 
@@ -135,6 +138,7 @@ describe('ProductDetails — successful product load', () => {
 describe('ProductDetails — error states', () => {
   beforeEach(() => {
     useCart.mockReturnValue(mockUseCart);
+    useCartActions.mockReturnValue({ addToCart: mockUseCart.addToCart });
   });
 
   it('TC-UNIT-FE-PRODDET-004 — shows error content when product is not found (getProductById returns null)', async () => {

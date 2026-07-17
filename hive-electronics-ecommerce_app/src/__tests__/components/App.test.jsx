@@ -82,28 +82,28 @@ describe('App — route wiring', () => {
     expect(screen.getByTestId('page-home')).toBeInTheDocument();
   });
 
-  it('TC-UNIT-FE-APP-002 — "/cart" renders Cart', () => {
+  it('TC-UNIT-FE-APP-002 — "/cart" renders Cart', async () => {
     testRoute = '/cart';
     render(<App />);
-    expect(screen.getByTestId('page-cart')).toBeInTheDocument();
+    expect(await screen.findByTestId('page-cart')).toBeInTheDocument();
   });
 
-  it('TC-UNIT-FE-APP-003 — "/login" renders Login', () => {
+  it('TC-UNIT-FE-APP-003 — "/login" renders Login', async () => {
     testRoute = '/login';
     render(<App />);
-    expect(screen.getByTestId('page-login')).toBeInTheDocument();
+    expect(await screen.findByTestId('page-login')).toBeInTheDocument();
   });
 
-  it('TC-UNIT-FE-APP-004 — "/checkout" renders Checkout (via ProtectedRoute stub)', () => {
+  it('TC-UNIT-FE-APP-004 — "/checkout" renders Checkout (via ProtectedRoute stub)', async () => {
     testRoute = '/checkout';
     render(<App />);
-    expect(screen.getByTestId('page-checkout')).toBeInTheDocument();
+    expect(await screen.findByTestId('page-checkout')).toBeInTheDocument();
   });
 
-  it('TC-UNIT-FE-APP-005 — "/order-confirmation" renders Order (via ProtectedRoute stub)', () => {
+  it('TC-UNIT-FE-APP-005 — "/order-confirmation" renders Order (via ProtectedRoute stub)', async () => {
     testRoute = '/order-confirmation';
     render(<App />);
-    expect(screen.getByTestId('page-order')).toBeInTheDocument();
+    expect(await screen.findByTestId('page-order')).toBeInTheDocument();
   });
 
   it('TC-UNIT-FE-APP-006 — unknown path renders wildcard "Page not available"', () => {

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { useCart } from "../../context/CartContext";
+import { useCartActions } from "../../context/CartContext";
 import categoriesData from "../../data/categories.json";
 import { getProductById } from "../../services/productServices";
 import Button from "../common/Button";
@@ -9,7 +9,7 @@ import Loading from "../common/Loading/Loading";
 import "./ProductDetails.css";
 
 export default function ProductDetails({ productId }) {
-  const { addToCart } = useCart();
+  const { addToCart } = useCartActions();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -38,7 +38,7 @@ export default function ProductDetails({ productId }) {
       ) ||
       null
     );
-  }, []);
+  }, [product]);
 
   const handleAddToCart = () => {
     if (product) addToCart(product, 1);
@@ -77,11 +77,10 @@ export default function ProductDetails({ productId }) {
               image ? image[0] : "/img/products/placeholder.svg"
             }
             alt={name}
+            loading="eager"
+            fetchpriority="high"
             onError={(event) => {
-              console.log(product);
-              console.log(event.nativeEvent);
-              event.target.src =
-                "https://www.newswire.com/files/a6/db/4a7855c672f0ba3e1d306f48edda.jpg";
+              event.target.src = "/img/products/placeholder.svg";
             }}
           ></img>
         </div>

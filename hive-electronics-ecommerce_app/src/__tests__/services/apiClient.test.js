@@ -15,7 +15,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import apiClient from '../../services/apiClient';
+import apiClient, { clearApiCache } from '../../services/apiClient';
 
 const BASE_URL = process.env.REACT_APP_API_URL;
 
@@ -31,6 +31,7 @@ beforeEach(() => {
   fetchMock = vi.fn();
   vi.stubGlobal('fetch', fetchMock);
   localStorage.clear();
+  clearApiCache();
   // Stub window.location.href setter (jsdom allows assignment but doesn't navigate)
   Object.defineProperty(window, 'location', {
     value: { ...window.location, href: '' },
@@ -129,5 +130,62 @@ describe('Error responses', () => {
     fetchMock.mockResolvedValue(makeResponse(500, {}, false));
 
     await expect(apiClient('/products')).rejects.toThrow('Request failed');
+  });
+});
+
+// ── GET cache ──────────────────────────────────────────────────────────────────
+describe('GET cache', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('TC-UNIT-FE-API-008 — second GET to the same path returns cached data without calling fetch again', async () => {
+    const data = [{ _id: 'p1', name: 'Widget' }];
+    fetchMock.mockResolvedValue(makeResponse(200, data));
+
+    const first = await apiClient('/products');
+    const second = await apiClient('/products');
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(second).toEqual(first);
+  });
+
+  it('TC-UNIT-FE-API-009 — GET to a different path is not served from another path\'s cache', async () => {
+    fetchMock.mockResolvedValue(makeResponse(200, []));
+
+    await apiClient('/products');
+    await apiClient('/categories');
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('TC-UNIT-FE-API-010 — non-GET requests are never cached', async () => {
+    fetchMock.mockResolvedValue(makeResponse(200, { ok: true }));
+
+    await apiClient('/carts/addToCart', { method: 'POST', body: '{}' });
+    await apiClient('/carts/addToCart', { method: 'POST', body: '{}' });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('TC-UNIT-FE-API-011 — a cached GET entry expires after the TTL and triggers a fresh fetch', async () => {
+    vi.useFakeTimers();
+    fetchMock.mockResolvedValue(makeResponse(200, []));
+
+    await apiClient('/products');
+    vi.advanceTimersByTime(60_001);
+    await apiClient('/products');
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('TC-UNIT-FE-API-012 — clearApiCache() forces a fresh fetch on the next GET', async () => {
+    fetchMock.mockResolvedValue(makeResponse(200, []));
+
+    await apiClient('/products');
+    clearApiCache();
+    await apiClient('/products');
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });

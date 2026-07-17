@@ -1,9 +1,7 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CartView from "../../components/Cart/CartView";
-import AddressForm from "../../components/Checkout/Address/AddressForm";
 import AddressList from "../../components/Checkout/Address/AddressList";
-import PaymentMethodForm from "../../components/Checkout/PaymentMethod/PaymentMethodForm";
 import PaymentMethodList from "../../components/Checkout/PaymentMethod/PaymentMethodList";
 import SummarySection from "../../components/Checkout/SummarySection/SummarySection";
 import Button from "../../components/common/Button";
@@ -28,6 +26,11 @@ import {
 import { getCurrentUser } from "../../services/userServices";
 import { SHIPPING_RATE, FREE_SHIPPING_THRESHOLD } from "../../config/pricing";
 import "./Checkout.css";
+
+const AddressForm = lazy(() => import("../../components/Checkout/Address/AddressForm"));
+const PaymentMethodForm = lazy(() =>
+  import("../../components/Checkout/PaymentMethod/PaymentMethodForm")
+);
 
 const PAYMENT_TYPE_LABELS = {
   credit_card: "Credit card",
@@ -381,12 +384,14 @@ export default function Checkout() {
               onDelete={(address) => handleAddressDelete(address)}
             />
           ) : (
-            <AddressForm
-              onSubmit={handleAddressSubmit}
-              onCancel={handleCancelAddressForm}
-              initialValues={editingAddress || {}}
-              isEdit={!!editingAddress}
-            />
+            <Suspense fallback={<Loading />}>
+              <AddressForm
+                onSubmit={handleAddressSubmit}
+                onCancel={handleCancelAddressForm}
+                initialValues={editingAddress || {}}
+                isEdit={!!editingAddress}
+              />
+            </Suspense>
           )}
         </SummarySection>
 
@@ -412,12 +417,14 @@ export default function Checkout() {
               onDelete={handlePaymentDelete}
             />
           ) : (
-            <PaymentMethodForm
-              onSubmit={handlePaymentSubmit}
-              onCancel={handleCancelPaymentForm}
-              initialValues={editingPaymentMethod || {}}
-              isEdit={!!editingPaymentMethod}
-            />
+            <Suspense fallback={<Loading />}>
+              <PaymentMethodForm
+                onSubmit={handlePaymentSubmit}
+                onCancel={handleCancelPaymentForm}
+                initialValues={editingPaymentMethod || {}}
+                isEdit={!!editingPaymentMethod}
+              />
+            </Suspense>
           )}
         </SummarySection>
 
