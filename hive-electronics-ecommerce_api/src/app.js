@@ -5,7 +5,11 @@ import routes from "./routes/index.js";
 const createApp = () => {
   const app = express();
 
-  app.use(cors({ origin: "http://localhost:3000", credentials: true }));
+  const allowedOrigins = (process.env.CORS_ORIGIN || "http://localhost:3000")
+    .split(",")
+    .map((origin) => origin.trim());
+
+  app.use(cors({ origin: allowedOrigins, credentials: true }));
   app.use(express.json());
 
   app.get("/", (req, res) => {
