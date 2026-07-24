@@ -55,8 +55,60 @@ const updateAddressValidation = [
     .withMessage("Country must not be empty"),
 ];
 
+/**
+ * @openapi
+ * /addresses:
+ *   get:
+ *     tags: [Addresses]
+ *     summary: List all shipping addresses
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Array of shipping addresses
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/ShippingAddress'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedResponse'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenResponse'
+ */
 router.get("/addresses", authMiddleware, isAdmin, getShippingAddresses);
 
+/**
+ * @openapi
+ * /addresses/user/{id}:
+ *   get:
+ *     tags: [Addresses]
+ *     summary: List shipping addresses for a user
+ *     description: >
+ *       Always returns 200, even when the user has no addresses (an empty
+ *       array is not treated as a 404).
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Array of shipping addresses for the given user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/ShippingAddress'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedResponse'
+ *       422:
+ *         $ref: '#/components/responses/ValidationErrorResponse'
+ */
 router.get(
   "/addresses/user/:id",
   authMiddleware,
@@ -65,6 +117,41 @@ router.get(
   getShippingAddressesByUser,
 );
 
+/**
+ * @openapi
+ * /addresses/{id}:
+ *   get:
+ *     tags: [Addresses]
+ *     summary: Get a shipping address by id
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: The shipping address
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ShippingAddress'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedResponse'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenResponse'
+ *       404:
+ *         description: Address not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message: { type: string, example: Address not found }
+ *       422:
+ *         $ref: '#/components/responses/ValidationErrorResponse'
+ */
 router.get(
   "/addresses/:id",
   authMiddleware,
@@ -74,6 +161,32 @@ router.get(
   getShippingAddressById,
 );
 
+/**
+ * @openapi
+ * /addresses:
+ *   post:
+ *     tags: [Addresses]
+ *     summary: Create a shipping address
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ShippingAddressCreateInput'
+ *     responses:
+ *       201:
+ *         description: Shipping address created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ShippingAddress'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedResponse'
+ *       422:
+ *         $ref: '#/components/responses/ValidationErrorResponse'
+ */
 router.post(
   "/addresses",
   authMiddleware,
@@ -82,6 +195,48 @@ router.post(
   createShippingAddress,
 );
 
+/**
+ * @openapi
+ * /addresses/{id}:
+ *   put:
+ *     tags: [Addresses]
+ *     summary: Update a shipping address
+ *     description: >
+ *       "user" is not accepted/persisted by this endpoint even if sent, and
+ *       the response is not populated (unlike the create response).
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ShippingAddressUpdateInput'
+ *     responses:
+ *       200:
+ *         description: Updated shipping address
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ShippingAddress'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedResponse'
+ *       404:
+ *         description: Address not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message: { type: string, example: Address not found }
+ *       422:
+ *         $ref: '#/components/responses/ValidationErrorResponse'
+ */
 router.put(
   "/addresses/:id",
   authMiddleware,
@@ -90,6 +245,41 @@ router.put(
   updateShippingAddress,
 );
 
+/**
+ * @openapi
+ * /addresses/{id}:
+ *   delete:
+ *     tags: [Addresses]
+ *     summary: Delete a shipping address
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       204:
+ *         description: Address deleted
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message: { type: string, example: Entry deleted }
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedResponse'
+ *       404:
+ *         description: Address not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message: { type: string, example: Address not found }
+ *       422:
+ *         $ref: '#/components/responses/ValidationErrorResponse'
+ */
 router.delete(
   "/addresses/:id",
   authMiddleware,

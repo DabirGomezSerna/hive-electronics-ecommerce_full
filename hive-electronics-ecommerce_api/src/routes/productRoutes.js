@@ -64,12 +64,145 @@ const updateProductValidation = [
     .withMessage("Category must be a valid MongoDB ObjectId"),
 ];
 
+/**
+ * @openapi
+ * /products/search:
+ *   get:
+ *     tags: [Products]
+ *     summary: Search products
+ *     description: >
+ *       No express-validator chain on this route — all query parameters are
+ *       read directly by the controller and unvalidated.
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         schema: { type: string }
+ *         description: Matched against name/description via a case-insensitive regex.
+ *       - in: query
+ *         name: category
+ *         schema: { type: string }
+ *         description: Category ObjectId, used as-is (not cast/validated).
+ *       - in: query
+ *         name: minPrice
+ *         schema: { type: number }
+ *       - in: query
+ *         name: maxPrice
+ *         schema: { type: number }
+ *       - in: query
+ *         name: inStock
+ *         schema: { type: string, enum: ["true", "false"] }
+ *       - in: query
+ *         name: sort
+ *         schema: { type: string }
+ *       - in: query
+ *         name: order
+ *         schema: { type: string, enum: [asc, desc] }
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, default: 1 }
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, default: 10 }
+ *     responses:
+ *       200:
+ *         description: Paginated list of products
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 products:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Product'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     currentPage: { type: integer }
+ *                     totalPages: { type: integer }
+ *                     totalResults: { type: integer }
+ *                     hasNext: { type: boolean }
+ *                     hasPrev: { type: boolean }
+ */
 router.get("/products/search", searchProducts);
 
+/**
+ * @openapi
+ * /products:
+ *   get:
+ *     tags: [Products]
+ *     summary: List all products
+ *     responses:
+ *       200:
+ *         description: Array of products
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Product'
+ */
 router.get("/products", getProduct);
 
+/**
+ * @openapi
+ * /products/{id}:
+ *   get:
+ *     tags: [Products]
+ *     summary: Get a product by id
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: The product
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Product'
+ *       404:
+ *         description: Product not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message: { type: string, example: Product not found }
+ *       422:
+ *         $ref: '#/components/responses/ValidationErrorResponse'
+ */
 router.get("/products/:id", productIdValidation, validate, getProductById);
 
+/**
+ * @openapi
+ * /products:
+ *   post:
+ *     tags: [Products]
+ *     summary: Create a product
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ProductCreateInput'
+ *     responses:
+ *       201:
+ *         description: Product created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Product'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedResponse'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenResponse'
+ *       422:
+ *         $ref: '#/components/responses/ValidationErrorResponse'
+ */
 router.post(
   "/products",
   authMiddleware,
@@ -79,6 +212,51 @@ router.post(
   createProduct,
 );
 
+/**
+ * @openapi
+ * /products/{id}:
+ *   put:
+ *     tags: [Products]
+ *     summary: Update a product
+ *     description: >
+ *       Unlike the create/list/get responses, this endpoint's response is
+ *       not populated — "category" is returned as a raw ObjectId, not the
+ *       full Category document.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ProductUpdateInput'
+ *     responses:
+ *       200:
+ *         description: Updated product
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Product'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedResponse'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenResponse'
+ *       404:
+ *         description: Product not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message: { type: string, example: Product not found }
+ *       422:
+ *         $ref: '#/components/responses/ValidationErrorResponse'
+ */
 router.put(
   "/products/:id",
   authMiddleware,
@@ -88,6 +266,43 @@ router.put(
   updateProduct,
 );
 
+/**
+ * @openapi
+ * /products/{id}:
+ *   delete:
+ *     tags: [Products]
+ *     summary: Delete a product
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       204:
+ *         description: Product deleted
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message: { type: string, example: Product deleted }
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedResponse'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenResponse'
+ *       404:
+ *         description: Product not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message: { type: string, example: Product not found }
+ *       422:
+ *         $ref: '#/components/responses/ValidationErrorResponse'
+ */
 router.delete(
   "/products/:id",
   authMiddleware,
