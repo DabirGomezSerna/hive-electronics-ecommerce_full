@@ -18,9 +18,8 @@ const options = {
         description: "Local development server",
       },
       {
-        url: "https://hive-electronics-ecommerce-api.onrender.com",
-        description:
-          "Production server (placeholder — replace with the real Render deployment URL once known)",
+        url: "https://hive-electronics-ecommerce-full.onrender.com",
+        description: "Production server (Render)",
       },
     ],
     components: {
