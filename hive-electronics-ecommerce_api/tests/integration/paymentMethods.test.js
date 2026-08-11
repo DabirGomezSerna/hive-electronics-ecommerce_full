@@ -198,19 +198,27 @@ describe("PUT /api/payment-methods/:id", () => {
   });
 
   // TC-INT-PAY-014
-  it("TC-INT-PAY-014 — returns 500 when updating with isDefault:true [BUG-002: existing.user is undefined]", async () => {
+  it("TC-INT-PAY-014 — updating with isDefault:true returns 200 and unsets the previous default", async () => {
     const { user, token } = await customerSession();
-    const pm = await createPaymentMethod(user._id, { type: "paypal" });
+    const previousDefault = await createPaymentMethod(user._id, {
+      type: "paypal",
+      isDefault: true,
+    });
+    const pm = await createPaymentMethod(user._id, { type: "cash_on_delivery" });
 
     const res = await request(app)
       .put(`/api/payment-methods/${pm._id}`)
       .set("Authorization", `Bearer ${token}`)
       .send({ isDefault: true });
 
-    // BUG-002: updatePaymentMethod references `existing.user` at line 91
-    // but `existing` is never defined in scope. ReferenceError → 500.
-    // Expected correct behavior: 200 with isDefault: true and previous unset.
-    expect(res.status).toBe(500); // documents the bug
+    expect(res.status).toBe(200);
+    expect(res.body.isDefault).toBe(true);
+
+    const { token: adminToken } = await adminSession();
+    const updatedPrevious = await request(app)
+      .get(`/api/payment-methods/${previousDefault._id}`)
+      .set("Authorization", `Bearer ${adminToken}`);
+    expect(updatedPrevious.body.isDefault).toBe(false);
   });
 
   // TC-INT-PAY-015
