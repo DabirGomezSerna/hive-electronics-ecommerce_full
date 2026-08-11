@@ -21,15 +21,13 @@ Issues are organized by severity. Each entry includes the test ID that documents
 
 ---
 
-### BUG-002 — HIGH — `PUT /api/payment-methods/:id` crashes when `isDefault: true`
+### BUG-002 — ✅ RESOLVED — `PUT /api/payment-methods/:id` crashed when `isDefault: true`
 
 | Field | Value |
 |---|---|
-| **Location** | `src/controllers/paymentMethodController.js:91` |
-| **Documenting test** | TC-INT-PAY-014 (asserts `status: 500`) |
-| **Current behavior** | The "unset previous default" code path references `existing.user` but `existing` was never declared. Throws `ReferenceError: existing is not defined`. |
-| **Expected behavior** | `200` — previous default payment method is unset, new one is set. |
-| **Fix** | Declare `const existing = await PaymentMethod.findById(id)` before the `isDefault` branch. |
+| **Location** | `src/controllers/paymentMethodController.js` |
+| **Documenting test** | TC-INT-PAY-014 (now asserts `status: 200` and that the previous default is unset) |
+| **Resolution** | `updatePaymentMethod` now declares `const existing = await PaymentMethod.findById(id)` (with a `404` if not found) before the `isDefault` branch, so `existing.user` is defined when unsetting the previous default. This was the reported "Edit payment method won't save" bug — the crash was only triggered when `isDefault` was truthy, which happens whenever a user edits their existing default payment method (the form pre-populates the checkbox from the record being edited). |
 
 ---
 

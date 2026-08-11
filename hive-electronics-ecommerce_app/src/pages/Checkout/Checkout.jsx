@@ -249,6 +249,7 @@ export default function Checkout() {
 
   const handlePaymentSubmit = async (formData) => {
     try {
+      setError(null);
       let saved;
       let updatedMethods;
       let newSelected = selectedPaymentMethod;
@@ -274,6 +275,7 @@ export default function Checkout() {
       setPaymentSectionOpen(false);
     } catch (err) {
       console.error("Failed to save payment method:", err);
+      setError("Failed to save payment method. Please try again.");
     }
   };
 

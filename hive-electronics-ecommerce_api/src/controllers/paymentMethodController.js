@@ -86,6 +86,12 @@ const updatePaymentMethod = async (req, res, next) => {
       cvv,
     } = req.body;
 
+    const existing = await PaymentMethod.findById(id);
+    if (!existing) {
+      res.status(404).json({ message: "Payment method not found" });
+      return;
+    }
+
     if (isDefault) {
       await PaymentMethod.updateMany(
         { user: existing.user, _id: { $ne: id } },
