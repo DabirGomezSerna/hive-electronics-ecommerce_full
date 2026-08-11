@@ -7,3 +7,7 @@ Thumbs.db
 
 # Local MongoDB dumps
 mongo-dump/
+
+# Installed Claude skills (fetched via skill installer; reproducible from skills-lock.json)
+.agents/skills/
+.claude/skills/
