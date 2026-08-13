@@ -121,6 +121,32 @@ git branch -m old-name new-name
 git branch -v
 ```
 
+### Project branch taxonomy
+
+This repository uses the prefixes below. They take precedence over the generic Git Flow and Trunk-Based prefixes described later in this document.
+
+| Prefix | Use for | Commit type | Example |
+|---|---|---|---|
+| `feature/` | New user-facing functionality or endpoints | `feat` | `feature/create-account-signup` |
+| `fix/` | Bug fix in existing behavior, non-urgent | `fix` | `fix/payment-method-update-crash` |
+| `hotfix/` | Urgent break on `main` needing a fast-tracked merge | `fix` | `hotfix/checkout-500-on-order` |
+| `ui/` | Visual, styling, layout, copy — no logic change | `style` | `ui/product-card-spacing` |
+| `refactor/` | Restructuring with no behavior change | `refactor` | `refactor/extract-pricing-config` |
+| `test/` | Adding or repairing tests only | `test` | `test/cart-controller-coverage` |
+| `docs/` | README, CLAUDE.md, `docs/skills/*`, OpenAPI comments | `docs` | `docs/branching-strategy` |
+| `chore/` | Dependencies, config, tooling, `.gitignore`, CI | `chore` / `ci` | `chore/bump-mongoose-8` |
+
+**Slug rules:** lowercase kebab-case after the prefix; 2–5 words; describe the outcome, not the file touched (`fix/payment-method-update-crash`, not `fix/paymentcontroller`). No issue numbers unless one is supplied.
+
+**Overlapping prefixes:** the prefix describes the *primary intent* of the change. A visual change that also needs a small handler tweak is still `ui/`. A bug fix that ships with a regression test is still `fix/`. Use `refactor/` only when behavior is provably unchanged.
+
+Every branch is cut fresh from an up-to-date `origin/main` so branches stay independently mergeable:
+
+```bash
+git fetch origin
+git switch -c ui/product-card-spacing origin/main
+```
+
 ### Merge
 
 ```bash
