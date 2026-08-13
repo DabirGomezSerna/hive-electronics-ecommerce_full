@@ -368,6 +368,7 @@ header {
 
 /* Auth buttons */
 .auth-btn {
+  box-sizing: border-box;
   width: 100%;
   padding: 12px 16px;
   margin-bottom: 8px;
@@ -386,13 +387,14 @@ header {
 .auth-btn.primary {
   background: var(--accent);
   color: var(--text);
-  width: 86%;
+  width: 100%;
 }
 
 .auth-btn.secondary {
   background: transparent;
   color: var(--text);
   border: 1px solid var(--border);
+  width: 100%;
 }
 
 .auth-btn:last-child {

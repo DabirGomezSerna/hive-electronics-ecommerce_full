@@ -126,7 +126,7 @@ describe('Header — unauthenticated state', () => {
     // Assert
     await waitFor(() => {
       expect(screen.getByRole('link', { name: /log in/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /create account/i })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /create account/i })).toBeInTheDocument();
     });
   });
 });
