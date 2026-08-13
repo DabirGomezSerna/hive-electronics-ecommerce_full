@@ -477,7 +477,44 @@ Reusable best-practice skill documents live under `docs/skills/`. Each file carr
 
 ---
 
-## 8. Restrictions for the agent
+## 8. Git branching rules
+
+### Branch taxonomy
+
+| Prefix | Use for | Commit type | Example |
+|---|---|---|---|
+| `feature/` | New user-facing functionality or endpoints | `feat` | `feature/create-account-signup` |
+| `fix/` | Bug fix in existing behavior, non-urgent | `fix` | `fix/payment-method-update-crash` |
+| `hotfix/` | Urgent break on `main` needing a fast-tracked merge | `fix` | `hotfix/checkout-500-on-order` |
+| `ui/` | Visual, styling, layout, copy — no logic change | `style` | `ui/product-card-spacing` |
+| `refactor/` | Restructuring with no behavior change | `refactor` | `refactor/extract-pricing-config` |
+| `test/` | Adding or repairing tests only | `test` | `test/cart-controller-coverage` |
+| `docs/` | README, CLAUDE.md, `docs/skills/*`, OpenAPI comments | `docs` | `docs/branching-strategy` |
+| `chore/` | Dependencies, config, tooling, `.gitignore`, CI | `chore` / `ci` | `chore/bump-mongoose-8` |
+
+**Slug rules:** lowercase kebab-case after the prefix; 2–5 words; describe the outcome, not the file touched (`fix/payment-method-update-crash`, not `fix/paymentcontroller`). No issue numbers unless the user supplies one.
+
+**Overlapping prefixes:** the prefix describes the *primary intent* of the change. A visual change that also needs a small handler tweak is still `ui/`. A bug fix that ships with a regression test is still `fix/`. Use `refactor/` only when behavior is provably unchanged.
+
+### Standing rule
+
+Before making any file change in this repo, create a new branch — do **not** wait to be asked. Pick the prefix from the table by primary intent, cut it fresh from an up-to-date `origin/main`, and state the branch name in the first response of the task.
+
+```bash
+git fetch origin
+git switch -c <prefix>/<slug> origin/main
+```
+
+Exemptions — do **not** branch when:
+
+- The work is read-only (answering questions, reading code, analysis, reviews, running tests without changing them).
+- The request is a direct follow-up to work already committed on the current branch — keep committing there. If it is unclear whether a request is a follow-up or a new task, ask.
+
+Do **not** commit or push unless the user asks. Never commit directly to `main`.
+
+---
+
+## 9. Restrictions for the agent
 
 - Do **not** propose suggestions, improvements, refactors, or alternative architectures unless the user explicitly asks for them.
 - Do **not** list pending work, TODOs, missing features, or next steps.
