@@ -180,13 +180,14 @@ export default function Header() {
                         <Icon name="logIn" size={16} />
                         Log in
                       </Link>
-                      <button
+                      <Link
+                        to="/register"
                         className="auth-btn secondary"
                         onClick={handleRegister}
                       >
                         <Icon name="userPlus" size={16} />
                         Create account
-                      </button>
+                      </Link>
                     </div>
                   ) : (
                     <div className="user-section">

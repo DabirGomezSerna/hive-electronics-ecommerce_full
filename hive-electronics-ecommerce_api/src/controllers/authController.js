@@ -28,7 +28,7 @@ const checkUserExist = async (email) => {
 
 const register = async (req, res, next) => {
   try {
-    const { displayName, email, password, avatar } = req.body;
+    const { displayName, email, password } = req.body;
     const userExist = await checkUserExist(email);
 
     if (userExist) {
@@ -37,6 +37,8 @@ const register = async (req, res, next) => {
 
     const hashPassword = await generatePassword(password);
     const role = "customer";
+    const avatar =
+      "https://cdn.jsdelivr.net/gh/faker-js/assets-person-portrait/male/512/22.jpg";
 
     const newUser = new User({
       displayName,
