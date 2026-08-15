@@ -7,13 +7,12 @@
  *   1. GET /          — root greeting route (line 11)
  *   2. 404 catch-all  — registered after /api routes (line 17)
  *
- * The error handler (line 25) is already covered by any test that triggers
- * next(error) in a controller — for example TC-INT-ORD-001 (BUG-001) causes
- * a TypeError that flows through the error handler.
- *
- * Note: routes added after createApp() land after the 404 catch-all in
- * Express's stack and cannot be used to test the error handler directly
- * without modifying production source, so error-handler tests are omitted here.
+ * The error handler is covered by any test that triggers next(error) in a
+ * controller — for example TC-INT-ORD-001 (BUG-001) causes a TypeError that
+ * flows through it — plus dedicated tests in tests/integration/errorHandler.test.js,
+ * which reaches it directly via a malformed JSON body (routes registered
+ * after createApp() land after the 404 catch-all, so that indirect path is
+ * the only way in without modifying production source).
  */
 
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
