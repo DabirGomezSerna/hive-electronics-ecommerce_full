@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import apiClient from "../services/apiClient";
 import { getCurrentUser } from "../services/userServices";
+import logger from "../services/logger";
 
 const CartContext = createContext();
 // Separate context carrying only the stable addToCart reference, so components
@@ -14,6 +15,7 @@ const transformCart = (cart) =>
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
   const [cartId, setCartId] = useState(null);
+  const [cartError, setCartError] = useState(null);
 
   // Load cart on mount
   useEffect(() => {
@@ -29,7 +31,8 @@ export function CartProvider({ children }) {
         setCartId(cart._id);
         setCartItems(transformCart(cart));
       })
-      .catch(() => {
+      .catch((error) => {
+        logger.warn("Cart could not be loaded from the API", { error });
         setCartItems([]);
       });
   }, []);
@@ -53,34 +56,50 @@ export function CartProvider({ children }) {
         }
         return [...prev, { ...product, quantity }];
       });
-      return;
+      return true;
     }
 
-    const cart = await apiClient("/carts/addToCart", {
-      method: "POST",
-      body: JSON.stringify({ userId: user.userId, productId: product._id, quantity }),
-    });
-    setCartId(cart._id);
-    setCartItems(transformCart(cart));
+    try {
+      const cart = await apiClient("/carts/addToCart", {
+        method: "POST",
+        body: JSON.stringify({ userId: user.userId, productId: product._id, quantity }),
+      });
+      setCartId(cart._id);
+      setCartItems(transformCart(cart));
+      setCartError(null);
+      return true;
+    } catch (error) {
+      logger.error("Failed to add product to cart", { productId: product._id, error });
+      setCartError("We couldn't add that product to your cart. Please try again.");
+      return false;
+    }
   }, []);
 
   const clearCart = useCallback(async () => {
     const user = getCurrentUser();
     if (!user || !cartId) {
       setCartItems([]);
-      return;
+      return true;
     }
 
-    await apiClient(`/carts/${cartId}`, { method: "DELETE" });
-    setCartId(null);
-    setCartItems([]);
+    try {
+      await apiClient(`/carts/${cartId}`, { method: "DELETE" });
+      setCartId(null);
+      setCartItems([]);
+      setCartError(null);
+      return true;
+    } catch (error) {
+      logger.error("Failed to clear cart", { cartId, error });
+      setCartError("We couldn't empty your cart. Please try again.");
+      return false;
+    }
   }, [cartId]);
 
   const removeFromCart = useCallback(async (productId) => {
     const user = getCurrentUser();
     if (!user) {
       setCartItems((prev) => prev.filter((i) => i._id !== productId));
-      return;
+      return true;
     }
 
     const updatedProducts = cartItems
@@ -88,22 +107,28 @@ export function CartProvider({ children }) {
       .map(({ _id, quantity }) => ({ product: _id, quantity }));
 
     if (updatedProducts.length === 0) {
-      await clearCart();
-      return;
+      return clearCart();
     }
 
-    const cart = await apiClient(`/carts/${cartId}`, {
-      method: "PUT",
-      body: JSON.stringify({ user: user.userId, products: updatedProducts }),
-    });
-    setCartId(cart._id);
-    setCartItems(transformCart(cart));
+    try {
+      const cart = await apiClient(`/carts/${cartId}`, {
+        method: "PUT",
+        body: JSON.stringify({ user: user.userId, products: updatedProducts }),
+      });
+      setCartId(cart._id);
+      setCartItems(transformCart(cart));
+      setCartError(null);
+      return true;
+    } catch (error) {
+      logger.error("Failed to remove product from cart", { productId, error });
+      setCartError("We couldn't remove that product. Please try again.");
+      return false;
+    }
   }, [cartItems, cartId, clearCart]);
 
   const updateQuantity = useCallback(async (productId, newQuantity) => {
     if (newQuantity <= 0) {
-      await removeFromCart(productId);
-      return;
+      return removeFromCart(productId);
     }
 
     const user = getCurrentUser();
@@ -113,7 +138,7 @@ export function CartProvider({ children }) {
           i._id === productId ? { ...i, quantity: newQuantity } : i
         )
       );
-      return;
+      return true;
     }
 
     const updatedProducts = cartItems.map(({ _id, quantity }) => ({
@@ -121,12 +146,20 @@ export function CartProvider({ children }) {
       quantity: _id === productId ? newQuantity : quantity,
     }));
 
-    const cart = await apiClient(`/carts/${cartId}`, {
-      method: "PUT",
-      body: JSON.stringify({ user: user.userId, products: updatedProducts }),
-    });
-    setCartId(cart._id);
-    setCartItems(transformCart(cart));
+    try {
+      const cart = await apiClient(`/carts/${cartId}`, {
+        method: "PUT",
+        body: JSON.stringify({ user: user.userId, products: updatedProducts }),
+      });
+      setCartId(cart._id);
+      setCartItems(transformCart(cart));
+      setCartError(null);
+      return true;
+    } catch (error) {
+      logger.error("Failed to update product quantity", { productId, newQuantity, error });
+      setCartError("We couldn't update the quantity. Please try again.");
+      return false;
+    }
   }, [cartItems, cartId, removeFromCart]);
 
   const getTotalItems = useCallback(
@@ -139,6 +172,8 @@ export function CartProvider({ children }) {
     [cartItems]
   );
 
+  const clearCartError = useCallback(() => setCartError(null), []);
+
   const value = useMemo(
     () => ({
       cartItems,
@@ -149,8 +184,20 @@ export function CartProvider({ children }) {
       clearCart,
       getTotalItems,
       getTotalPrice,
+      cartError,
+      clearCartError,
     }),
-    [cartItems, addToCart, removeFromCart, updateQuantity, clearCart, getTotalItems, getTotalPrice]
+    [
+      cartItems,
+      addToCart,
+      removeFromCart,
+      updateQuantity,
+      clearCart,
+      getTotalItems,
+      getTotalPrice,
+      cartError,
+      clearCartError,
+    ]
   );
 
   // addToCart never changes identity (see its useCallback deps above), so this

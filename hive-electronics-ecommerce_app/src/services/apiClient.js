@@ -1,7 +1,20 @@
+import logger from "./logger";
+
 const BASE_URL = process.env.REACT_APP_API_URL;
 
 const GET_CACHE_TTL_MS = 60_000;
 const getCache = new Map();
+
+export class ApiError extends Error {
+  constructor(message, { status = 0, path, method, body } = {}) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.path = path;
+    this.method = method;
+    this.body = body;
+  }
+}
 
 const apiClient = async (path, options = {}) => {
   const method = (options.method || "GET").toUpperCase();
@@ -20,7 +33,17 @@ const apiClient = async (path, options = {}) => {
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${BASE_URL}${path}`, { ...options, headers });
+  let response;
+  try {
+    response = await fetch(`${BASE_URL}${path}`, { ...options, headers });
+  } catch (cause) {
+    logger.error("Network request failed", { path, method, error: cause });
+    throw new ApiError("Network error. Check your connection and try again.", {
+      status: 0,
+      path,
+      method,
+    });
+  }
 
   if (response.status === 204) {
     return null;
@@ -30,14 +53,26 @@ const apiClient = async (path, options = {}) => {
     localStorage.removeItem("authToken");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("userData");
+    logger.warn("Session expired, redirecting to login", { path, method });
     window.location.href = "/login";
-    return;
+    throw new ApiError("Your session expired. Please log in again.", {
+      status: 401,
+      path,
+      method,
+    });
   }
 
-  const data = await response.json();
+  let data = null;
+  try {
+    data = await response.json();
+  } catch {
+    data = null;
+  }
 
   if (!response.ok) {
-    throw new Error(data.message || "Request failed");
+    const message = data?.message || "Request failed";
+    logger.warn("API request failed", { path, method, status: response.status });
+    throw new ApiError(message, { status: response.status, path, method, body: data });
   }
 
   if (method === "GET") {
