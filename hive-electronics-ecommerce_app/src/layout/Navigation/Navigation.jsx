@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Icon from "../../components/common/Icon/Icon";
 import { fetchCategories } from "../../services/categoryServices";
+import logger from "../../services/logger";
 import "./Navigation.css";
 
 const Navigation = ({ isMobile = false, onLinkClick }) => {
@@ -26,8 +27,9 @@ const Navigation = ({ isMobile = false, onLinkClick }) => {
         );
 
         setCategories(mainCategories);
-      } catch {
+      } catch (error) {
         // navigation still renders without categories
+        logger.warn("Navigation: categories failed to load", { error });
       }
     };
 
@@ -113,7 +115,6 @@ const Navigation = ({ isMobile = false, onLinkClick }) => {
             {isDropdownOpen && (
               <div className="categories-dropdown-menu">
                 {categories.map((category) => {
-                  console.log("hello");
                   const subcategories = getSubcategories(category._id);
                   return (
                     <div key={category._id} className="category-group">

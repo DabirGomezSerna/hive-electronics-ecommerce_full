@@ -7,6 +7,7 @@ import {
 import ProductCard from "../ProductCard/ProductCard";
 import ErrorMessage from "../common/ErrorMessage/ErrorMessage";
 import Loading from "../common/Loading/Loading";
+import logger from "../../services/logger";
 import "./CategoryDetails.css";
 
 export default function CategoryDetails({ categoryId }) {
@@ -36,6 +37,10 @@ export default function CategoryDetails({ categoryId }) {
         setProducts(productsData);
       } catch (err) {
         setError("Error while loading category or product");
+        logger.error("CategoryDetails: failed to load category or products", {
+          categoryId,
+          error: err,
+        });
       } finally {
         setLoading(false);
       }

@@ -25,6 +25,7 @@ import {
 } from "../../services/shippingServices";
 import { getCurrentUser } from "../../services/userServices";
 import { SHIPPING_RATE, FREE_SHIPPING_THRESHOLD } from "../../config/pricing";
+import logger from "../../services/logger";
 import "./Checkout.css";
 
 const AddressForm = lazy(() => import("../../components/Checkout/Address/AddressForm"));
@@ -95,7 +96,7 @@ export default function Checkout() {
       setPaymentSectionOpen(!defaultMethod);
     } catch (err) {
       setError("Unable to load checkout information");
-      console.error(err);
+      logger.error("Checkout: failed to load addresses and payment methods", { error: err });
     } finally {
       setLoading(false);
     }
@@ -159,7 +160,7 @@ export default function Checkout() {
     try {
       await deleteShippingAddress(address._id);
     } catch (err) {
-      console.error("Failed to delete address:", err);
+      logger.error("Checkout: failed to delete address", { addressId: address._id, error: err });
     }
     const updatedAddresses = addresses.filter((add) => add._id !== address._id);
     if (selectedAddress?._id === address._id && updatedAddresses.length > 0) {
@@ -196,7 +197,7 @@ export default function Checkout() {
       setEditingAddress(null);
       setAddressSectionOpen(false);
     } catch (err) {
-      console.error("Failed to save address:", err);
+      logger.error("Checkout: failed to save address", { error: err });
     }
   };
 
@@ -236,7 +237,10 @@ export default function Checkout() {
     try {
       await deletePaymentMethod(method._id);
     } catch (err) {
-      console.error("Failed to delete payment method:", err);
+      logger.error("Checkout: failed to delete payment method", {
+        paymentMethodId: method._id,
+        error: err,
+      });
     }
     const updated = paymentMethods.filter((m) => m._id !== method._id);
     if (selectedPaymentMethod?._id === method._id && updated.length > 0) {
@@ -274,7 +278,8 @@ export default function Checkout() {
       setEditingPaymentMethod(null);
       setPaymentSectionOpen(false);
     } catch (err) {
-      console.error("Failed to save payment method:", err);
+      // Never log formData here — it can carry card number and CVV.
+      logger.error("Checkout: failed to save payment method", { error: err });
       setError("Failed to save payment method. Please try again.");
     }
   };
@@ -345,7 +350,7 @@ export default function Checkout() {
       });
       clearCart();
     } catch (err) {
-      console.error("Failed to create order:", err);
+      logger.error("Checkout: failed to create order", { error: err });
       setError("Failed to place order. Please try again.");
     }
   };

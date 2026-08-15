@@ -4,6 +4,7 @@ import { fetchProducts, searchProducts } from "../../services/productServices";
 import List from "../../components/List/List";
 import ErrorMessage from "../../components/common/ErrorMessage/ErrorMessage";
 import Loading from "../../components/common/Loading/Loading";
+import logger from "../../services/logger";
 import "./Home.css";
 
 export default function Home() {
@@ -25,6 +26,7 @@ export default function Home() {
       } catch (error) {
         setError("Products didn't load. Try again later.");
         setProducts([]);
+        logger.error("Home: failed to load products", { query, error });
       } finally {
         setLoading(false);
       }
