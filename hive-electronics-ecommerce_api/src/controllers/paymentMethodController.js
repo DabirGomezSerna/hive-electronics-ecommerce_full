@@ -15,11 +15,10 @@ const getPaymentMethodById = async (req, res, next) => {
     const { id } = req.params;
     const paymentMethod = await PaymentMethod.findById(id).select("-cvv");
 
-    await paymentMethod.populate("user");
-
     if (!paymentMethod) {
       res.status(404).json({ message: "Payment method not found" });
     } else {
+      await paymentMethod.populate("user");
       res.json(paymentMethod);
     }
   } catch (error) {

@@ -75,17 +75,14 @@ describe("GET /api/payment-methods/:id", () => {
   });
 
   // TC-INT-PAY-005
-  it("TC-INT-PAY-005 — returns 500 for non-existent id [BUG-004: populate() called on null before null check]", async () => {
+  it("TC-INT-PAY-005 — returns 404 for non-existent id (BUG-004 fixed: null check runs before populate)", async () => {
     const { token } = await adminSession();
     const res = await request(app)
       .get(`/api/payment-methods/${validObjectId()}`)
       .set("Authorization", `Bearer ${token}`);
 
-    // BUG-004: getPaymentMethodById calls paymentMethod.populate("user") before
-    // checking if paymentMethod is null. When not found, throws
-    // "Cannot read properties of null (reading 'populate')".
-    // Expected correct behavior: 404. Actual: 500.
-    expect(res.status).toBe(500); // documents the bug — fix to 404
+    expect(res.status).toBe(404);
+    expect(res.body.message).toBe("Payment method not found");
   });
 
   // TC-INT-PAY-006

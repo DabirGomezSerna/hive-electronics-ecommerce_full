@@ -138,11 +138,12 @@ describe("DELETE /api/carts/:id — BUG-011", () => {
 });
 
 // ---------------------------------------------------------------------------
-// CRITICAL — BUG-008: removeFromCart double-response when product not in cart
+// BUG-008 (fixed): removeFromCart no longer double-responds when the
+// product is not in the cart — the 404 branch now returns immediately.
 // ---------------------------------------------------------------------------
 
-describe("POST /api/carts/removeFromCart — BUG-008", () => {
-  it("TC-DIAG-005 — product not in cart returns 404 (double-response risk after the 404 branch)", async () => {
+describe("POST /api/carts/removeFromCart", () => {
+  it("TC-DIAG-005 — product not in cart returns 404 and does not fall through to a second response", async () => {
     const { user, token } = await customerSession();
     const cat = await createCategory();
     const prod1 = await createProduct(cat._id);
@@ -168,11 +169,8 @@ describe("POST /api/carts/removeFromCart — BUG-008", () => {
         quantity: 1,
       });
 
-    // BUG-008: Controller enters the else branch and calls res.status(404).json(...)
-    // THEN falls through to execute: await cart.save(), await cart.populate(...), res.json(cart).
-    // This is a double-response: two calls to res after headers are committed.
-    // The client (supertest) receives the first response (404).
-    // Fix: add return before res.status(404) in the else-not-found branch.
+    // The else branch now `return`s its 404 immediately instead of falling
+    // through to cart.save()/populate()/res.json() afterward.
     expect(res.status).toBe(404);
     expect(res.body.message).toBe("Product not found in cart");
   });

@@ -4,12 +4,11 @@ const TAX_RATE = 0.16;
 
 const getOrders = async (req, res, next) => {
   try {
-    const orders = await Order.find();
-
-    await orders.populate("user");
-    await orders.populate("products.product");
-    await orders.populate("address");
-    await orders.populate("paymentMethod");
+    const orders = await Order.find()
+      .populate("user")
+      .populate("products.product")
+      .populate("address")
+      .populate("paymentMethod");
 
     res.json(orders);
   } catch (error) {

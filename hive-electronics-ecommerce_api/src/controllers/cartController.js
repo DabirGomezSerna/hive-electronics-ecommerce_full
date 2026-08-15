@@ -187,7 +187,7 @@ const removeProductFromCart = async (req, res, next) => {
           ? cart.products.splice(existingProductIndex, 1)
           : (cart.products[existingProductIndex].quantity -= 1);
       } else {
-        res.status(404).json({ message: "Product not found in cart" });
+        return res.status(404).json({ message: "Product not found in cart" });
       }
 
       await cart.save();
