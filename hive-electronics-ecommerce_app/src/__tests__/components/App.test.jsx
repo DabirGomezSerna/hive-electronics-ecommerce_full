@@ -18,7 +18,7 @@
  * is always initialized by then.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import App from '../../components/App/App';
 
@@ -43,7 +43,9 @@ vi.mock('react-router-dom', async () => {
 
 // ── Page stubs ────────────────────────────────────────────────────────────────
 
-vi.mock('../../pages/Home/Home', () => ({ default: () => <div data-testid="page-home" /> }));
+// Wrapped in vi.fn() (rather than a plain arrow function) so the
+// error-boundary test below can swap in a throwing implementation.
+vi.mock('../../pages/Home/Home', () => ({ default: vi.fn(() => <div data-testid="page-home" />) }));
 vi.mock('../../pages/Cart/Cart', () => ({ default: () => <div data-testid="page-cart" /> }));
 vi.mock('../../pages/Login/Login', () => ({ default: () => <div data-testid="page-login" /> }));
 vi.mock('../../pages/Product', () => ({ default: () => <div data-testid="page-product" /> }));
@@ -67,10 +69,19 @@ vi.mock('../../layout/Layout', () => ({
   default: ({ children }) => <div data-testid="layout">{children}</div>,
 }));
 
+// Imported after the mocks above so this is the mocked (vi.fn()) module.
+import Home from '../../pages/Home/Home';
+
 // ── Setup ─────────────────────────────────────────────────────────────────────
 
 beforeEach(() => {
   testRoute = '/';
+});
+
+afterEach(() => {
+  // Restore Home's default (non-throwing) implementation after the
+  // error-boundary test below overrides it.
+  Home.mockImplementation(() => <div data-testid="page-home" />);
 });
 
 // ── Route tests ───────────────────────────────────────────────────────────────
@@ -110,5 +121,27 @@ describe('App — route wiring', () => {
     testRoute = '/this-route-does-not-exist';
     render(<App />);
     expect(screen.getByText('Page not available')).toBeInTheDocument();
+  });
+});
+
+describe('App — route error boundary', () => {
+  it('TC-UNIT-FE-APP-007 — a throwing page renders the route fallback, and Layout stays mounted', () => {
+    // React's default onCaughtError still logs to console.error for a caught
+    // error; keep the test output clean.
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    Home.mockImplementation(() => {
+      throw new Error('boom');
+    });
+
+    render(<App />);
+
+    // The fallback replaced the crashed page...
+    expect(screen.getByText('Something went wrong')).toBeInTheDocument();
+    expect(screen.queryByTestId('page-home')).not.toBeInTheDocument();
+    // ...but Layout (Header/Footer/Navigation) is still rendered around it.
+    expect(screen.getByTestId('layout')).toBeInTheDocument();
+
+    consoleErrorSpy.mockRestore();
   });
 });

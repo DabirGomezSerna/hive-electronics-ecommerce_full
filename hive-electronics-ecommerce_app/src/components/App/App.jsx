@@ -5,6 +5,7 @@ import Home from "../../pages/Home/Home";
 import Layout from "../../layout/Layout";
 import ProtectedRoute from "../../pages/ProtectedRoute";
 import Loading from "../common/Loading/Loading";
+import { RouteErrorBoundary } from "../common/ErrorFallback";
 import "./App.css";
 
 const Product = lazy(() => import("../../pages/Product"));
@@ -20,33 +21,35 @@ export default function App() {
     <CartProvider>
       <BrowserRouter>
         <Layout>
-          <Suspense fallback={<Loading />}>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/cart" element={<Cart />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Signup />} />
-              <Route path="/product/:productId" element={<Product />} />
-              <Route path="/category/:categoryId" element={<CategoryPage />} />
-              <Route
-                path="/checkout"
-                element={
-                  <ProtectedRoute>
-                    <Checkout />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/order-confirmation"
-                element={
-                  <ProtectedRoute>
-                    <Order />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="*" element={<div>Page not available</div>} />
-            </Routes>
-          </Suspense>
+          <RouteErrorBoundary>
+            <Suspense fallback={<Loading />}>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/cart" element={<Cart />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Signup />} />
+                <Route path="/product/:productId" element={<Product />} />
+                <Route path="/category/:categoryId" element={<CategoryPage />} />
+                <Route
+                  path="/checkout"
+                  element={
+                    <ProtectedRoute>
+                      <Checkout />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/order-confirmation"
+                  element={
+                    <ProtectedRoute>
+                      <Order />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route path="*" element={<div>Page not available</div>} />
+              </Routes>
+            </Suspense>
+          </RouteErrorBoundary>
         </Layout>
       </BrowserRouter>
     </CartProvider>

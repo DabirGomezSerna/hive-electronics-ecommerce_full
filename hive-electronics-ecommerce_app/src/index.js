@@ -1,7 +1,9 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import { ErrorBoundary } from "react-error-boundary";
 import "./index.css";
 import App from "../src/components/App/App";
+import ErrorFallback from "./components/common/ErrorFallback";
 import reportWebVitals from "./reportWebVitals";
 import logger from "./services/logger";
 
@@ -24,7 +26,18 @@ const root = ReactDOM.createRoot(document.getElementById("root"), {
 });
 root.render(
   <React.StrictMode>
-    <App></App>
+    <ErrorBoundary
+      FallbackComponent={ErrorFallback}
+      onError={(error, info) =>
+        logger.error("Unhandled render error", {
+          scope: "root",
+          componentStack: info?.componentStack,
+          error,
+        })
+      }
+    >
+      <App></App>
+    </ErrorBoundary>
   </React.StrictMode>
 );
 

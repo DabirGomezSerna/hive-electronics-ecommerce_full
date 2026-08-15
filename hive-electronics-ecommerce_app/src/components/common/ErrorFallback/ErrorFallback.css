@@ -1,0 +1,17 @@
+.error-fallback {
+  padding: var(--gap-lg, 32px);
+}
+
+.error-fallback-detail {
+  font-family: monospace;
+  font-size: 0.85em;
+  color: var(--danger, #e53e3e);
+  word-break: break-word;
+}
+
+.error-fallback-actions {
+  display: flex;
+  gap: var(--gap-md, 16px);
+  justify-content: center;
+  margin-top: var(--gap-md, 16px);
+}
