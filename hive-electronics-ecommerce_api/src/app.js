@@ -3,6 +3,8 @@ import cors from "cors";
 import swaggerUi from "swagger-ui-express";
 import routes from "./routes/index.js";
 import swaggerSpec from "./config/swagger.js";
+import requestLogger from "./middleware/requestLogger.js";
+import errorHandler from "./middleware/errorHandler.js";
 
 const createApp = () => {
   const app = express();
@@ -12,6 +14,7 @@ const createApp = () => {
     .map((origin) => origin.trim());
 
   app.use(cors({ origin: allowedOrigins, credentials: true }));
+  app.use(requestLogger);
   app.use(express.json());
 
   app.get("/", (req, res) => {
@@ -35,9 +38,7 @@ const createApp = () => {
     });
   });
 
-  app.use((err, req, res, next) => {
-    res.status(err.status || 500).json({ message: err.message || "Internal server error" });
-  });
+  app.use(errorHandler);
 
   return app;
 };
