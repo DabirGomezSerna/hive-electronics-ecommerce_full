@@ -15,7 +15,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import apiClient, { clearApiCache } from '../../services/apiClient';
+import apiClient, { clearApiCache, ApiError } from '../../services/apiClient';
 
 const BASE_URL = process.env.REACT_APP_API_URL;
 
@@ -108,16 +108,25 @@ describe('Successful responses', () => {
 
 // ── Error responses ───────────────────────────────────────────────────────────
 describe('Error responses', () => {
-  it('TC-UNIT-FE-API-005 — clears localStorage and redirects on 401', async () => {
+  it('TC-UNIT-FE-API-005 — clears localStorage, redirects, and throws an ApiError on 401', async () => {
     localStorage.setItem('authToken', 'expired-token');
     localStorage.setItem('userData', '{"email":"test@example.com"}');
     fetchMock.mockResolvedValue(makeResponse(401, { message: 'Unauthorized' }, false));
 
-    await apiClient('/orders');
+    await expect(apiClient('/orders')).rejects.toBeInstanceOf(ApiError);
 
     expect(localStorage.getItem('authToken')).toBeNull();
     expect(localStorage.getItem('userData')).toBeNull();
     expect(window.location.href).toBe('/login');
+  });
+
+  it('TC-UNIT-FE-API-005b — the 401 ApiError carries status 401', async () => {
+    fetchMock.mockResolvedValue(makeResponse(401, { message: 'Unauthorized' }, false));
+
+    const error = await apiClient('/orders').catch((e) => e);
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error.status).toBe(401);
   });
 
   it('TC-UNIT-FE-API-006 — throws error with message from API body on non-ok response', async () => {
@@ -130,6 +139,28 @@ describe('Error responses', () => {
     fetchMock.mockResolvedValue(makeResponse(500, {}, false));
 
     await expect(apiClient('/products')).rejects.toThrow('Request failed');
+  });
+
+  it('TC-UNIT-FE-API-006c — a network failure (fetch rejects) throws an ApiError with status 0', async () => {
+    fetchMock.mockRejectedValue(new TypeError('Failed to fetch'));
+
+    const error = await apiClient('/products').catch((e) => e);
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error.status).toBe(0);
+  });
+
+  it('TC-UNIT-FE-API-006d — a non-ok response whose json() rejects still surfaces the HTTP status, not a SyntaxError', async () => {
+    fetchMock.mockResolvedValue({
+      status: 502,
+      ok: false,
+      json: vi.fn().mockRejectedValue(new SyntaxError('Unexpected token <')),
+    });
+
+    const error = await apiClient('/products').catch((e) => e);
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error.status).toBe(502);
   });
 });
 

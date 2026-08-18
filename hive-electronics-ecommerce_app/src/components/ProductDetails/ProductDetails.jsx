@@ -13,6 +13,7 @@ export default function ProductDetails({ productId }) {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [addError, setAddError] = useState(null);
 
   useEffect(() => {
     setLoading(true);
@@ -40,8 +41,10 @@ export default function ProductDetails({ productId }) {
     );
   }, [product]);
 
-  const handleAddToCart = () => {
-    if (product) addToCart(product, 1);
+  const handleAddToCart = async () => {
+    if (!product) return;
+    const succeeded = await addToCart(product, 1);
+    setAddError(succeeded ? null : "We couldn't add this product to your cart. Please try again.");
   };
 
   if (loading) {
@@ -111,6 +114,7 @@ export default function ProductDetails({ productId }) {
               See cart
             </Link>
           </div>
+          {addError && <ErrorMessage>{addError}</ErrorMessage>}
         </div>
       </div>
     </div>

@@ -18,7 +18,12 @@ vi.mock('../../services/categoryServices', () => ({
   fetchCategories: vi.fn(),
 }));
 
+vi.mock('../../services/logger', () => ({
+  default: { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() },
+}));
+
 import { fetchCategories } from '../../services/categoryServices';
+import logger from '../../services/logger';
 import Navigation from '../../layout/Navigation/Navigation';
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -87,6 +92,23 @@ describe('Navigation — category loading', () => {
     });
     // No error boundary / crash
     expect(screen.getByText('Nvidia special offers')).toBeInTheDocument();
+  });
+
+  it('TC-UNIT-FE-NAV-003b — logs a warning when fetchCategories rejects, instead of failing silently', async () => {
+    // Arrange
+    fetchCategories.mockRejectedValue(new Error('Network error'));
+    logger.warn.mockClear();
+
+    // Act
+    renderNav();
+
+    // Assert
+    await waitFor(() => {
+      expect(logger.warn).toHaveBeenCalledWith(
+        'Navigation: categories failed to load',
+        expect.objectContaining({ error: expect.any(Error) })
+      );
+    });
   });
 });
 

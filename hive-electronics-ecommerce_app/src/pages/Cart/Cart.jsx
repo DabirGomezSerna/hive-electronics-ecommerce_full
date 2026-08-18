@@ -2,11 +2,12 @@ import { useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import CartView from "../../components/Cart/CartView";
 import Button from "../../components/common/Button";
+import ErrorMessage from "../../components/common/ErrorMessage/ErrorMessage";
 import Icon from "../../components/common/Icon/Icon";
 import "./Cart.css";
 
 export default function Cart() {
-  const { cartItems, clearCart, getTotalItems, getTotalPrice } = useCart();
+  const { cartItems, clearCart, getTotalItems, getTotalPrice, cartError } = useCart();
   const totalItems = getTotalItems();
   const navigate = useNavigate();
 
@@ -46,6 +47,8 @@ export default function Cart() {
           </Button>
         </div>
       </div>
+
+      {cartError && <ErrorMessage>{cartError}</ErrorMessage>}
 
       <div className="cart-items">
         <CartView />
