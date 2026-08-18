@@ -43,24 +43,28 @@ const orderBody = ({ user, prod, addr, pm }) => ({
 });
 
 // ---------------------------------------------------------------------------
-// GET /api/orders  [ADMIN ONLY — BUG-001: array.populate not a function]
+// GET /api/orders  [ADMIN ONLY]
 // ---------------------------------------------------------------------------
 
 describe("GET /api/orders", () => {
   // TC-INT-ORD-001
-  it("TC-INT-ORD-001 — returns 500 [BUG-001: Order.find() returns array, array.populate() is not a function]", async () => {
+  it("TC-INT-ORD-001 — returns 200 with populated orders (BUG-001 fixed: .populate() chained on the query)", async () => {
     const { token } = await adminSession();
+    const fixture = await buildOrderFixture();
+    await request(app)
+      .post("/api/orders")
+      .set("Authorization", `Bearer ${fixture.token}`)
+      .send(orderBody(fixture));
 
     const res = await request(app)
       .get("/api/orders")
       .set("Authorization", `Bearer ${token}`);
 
-    // BUG-001: orderController.getOrders chains .populate() on the result of
-    // Order.find() which is an array, not a Mongoose query. This throws
-    // "TypeError: orders.populate is not a function" and results in a 500.
-    // Expected correct behavior: 200 with array of orders.
-    // Fix: chain .populate() directly on Order.find() query before awaiting.
-    expect(res.status).toBe(500); // documents the bug — fix to 200
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body.length).toBeGreaterThan(0);
+    expect(res.body[0].user).toHaveProperty("email");
+    expect(res.body[0].products[0].product).toHaveProperty("name");
   });
 
   // TC-INT-ORD-002

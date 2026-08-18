@@ -80,21 +80,21 @@ tests/
 Tests for these cases are written to assert CURRENT behavior and are marked clearly.  
 Once the bug is fixed, the test expectation must be updated to the CORRECT behavior.
 
-| Bug ID | Location | Description | Affected Tests | Current Behavior | Expected After Fix |
-|---|---|---|---|---|---|
-| BUG-001 | `orderController.js:7-9` | `Order.find()` returns an array; calling `.populate()` on an array throws `TypeError: orders.populate is not a function` | TC-INT-ORD-001 | 500 | 200 |
-| BUG-002 | `paymentMethodController.js:91` | `existing.user` referenced but `existing` is never declared in `updatePaymentMethod`. Throws `ReferenceError` when `isDefault: true` | TC-INT-PAY-014 | 500 | 200 |
-| BUG-003 | `shippingAddressController.js:74` | Destructures `postalcode` (lowercase c) but schema field is `postalCode` (uppercase C). `postalCode` updates are silently ignored | TC-INT-ADDR-016 | 200 (value unchanged) | 200 (value updated) |
-| BUG-004 | `paymentMethodController.js:17-19` | `getPaymentMethodById` calls `.populate("user")` before null check. If not found, throws on null | TC-INT-PAY-005 | 500 | 404 |
-| BUG-005 | `categoryController.js:35,52` | Controller uses field name `imageURL` (uppercase L) but schema defines `imageUrl` (lowercase l). Passed value is silently discarded | No dedicated test — schema default always used | Schema default | Passed value stored |
-| BUG-006 | `cartController.js` | `removeFromCart` always decrements product quantity by 1 regardless of the quantity provided in the request body | TC-INT-CART-013 | Decrements by 1 | Decrements by requested qty |
-| BUG-007 | `userController.js:44-56` | `searchUsers` with `email` or `role` param but **no** `q` builds `{ $regex: undefined }` → BSON serializes `undefined` to `null` → MongoDB rejects `$regex: null` → 500 crash | TC-DIAG-001 | 500 | 200 with filtered results |
-| BUG-008 | `cartController.js:186-196` | `removeProductFromCart` "product not in cart" path sends `res.status(404)` then **falls through** and calls `res.json(cart)` — double-response | TC-DIAG-005 | 404 + double-response in server | 404 only (add `return`) |
-| BUG-009 | `orderController.js:99-101` | `updateOrderStatus` returns `204` (No Content) instead of `404` when order is not found | TC-DIAG-006 | 204 | 404 |
-| BUG-010 | `userRoutes.js:73-79` | `DELETE /users/:id` chains `userIdValidation` but never calls `validate` → invalid ObjectId bypasses check → CastError → 500 | TC-DIAG-003 | 500 | 422 |
-| BUG-011 | `cartRoutes.js:135` | `DELETE /carts/:id` chains `cartIdValidation` but never calls `validate` → same CastError path → 500 | TC-DIAG-004 | 500 | 422 |
-| BUG-012 | `authController.js:74` | `login` calls `generateToken(userExist._id, userExist.name, …)` but User schema has `displayName` not `name` → JWT payload contains no `name` field | TC-DIAG-002 | `name` undefined in JWT | `name` = user's displayName |
-| BUG-013 | `userController.js:96-111` | `createUser` does not check for duplicate email before `User.create()` → Mongoose unique index throws → caught → 500 (unlike `register` which checks first) | TC-DIAG-013 | 500 | 400 or 409 |
+| Bug ID | Status | Location | Description | Affected Tests | Current Behavior | Expected After Fix |
+|---|---|---|---|---|---|---|
+| BUG-001 | ✅ Fixed | `orderController.js:7-9` | `Order.find()` returned an array; calling `.populate()` on an array threw `TypeError: orders.populate is not a function`. Fixed by chaining `.populate()` on the query before awaiting, matching `getOrderById`. | TC-INT-ORD-001 | 200 | 200 |
+| BUG-002 | ✅ Fixed | `paymentMethodController.js:91` | `existing.user` was referenced but `existing` was never declared in `updatePaymentMethod`, throwing a `ReferenceError` when `isDefault: true`. Fixed by declaring `const existing = await PaymentMethod.findById(id)` (404 if not found) before the isDefault branch. | TC-INT-PAY-014 | 200 | 200 |
+| BUG-003 | ✅ Fixed | `shippingAddressController.js` | Was destructuring the wrong-cased field name; `postalCode` updates were silently ignored. Fixed to destructure `postalCode` correctly. | TC-INT-ADDR-016 | 200 (value updated) | 200 (value updated) |
+| BUG-004 | ✅ Fixed | `paymentMethodController.js:17-19` | `getPaymentMethodById` called `.populate("user")` before the null check, throwing on a missing id. Fixed by moving the populate below the `if (!paymentMethod)` check. | TC-INT-PAY-005 | 404 | 404 |
+| BUG-005 | Open | `categoryController.js:35,52` | Controller uses field name `imageURL` (uppercase L) but schema defines `imageUrl` (lowercase l). Passed value is silently discarded | No dedicated test — schema default always used | Schema default | Passed value stored |
+| BUG-006 | Open | `cartController.js` | `removeFromCart` always decrements product quantity by 1 regardless of the quantity provided in the request body | TC-INT-CART-013 | Decrements by 1 | Decrements by requested qty |
+| BUG-007 | Open | `userController.js:44-56` | `searchUsers` with `email` or `role` param but **no** `q` builds `{ $regex: undefined }` → BSON serializes `undefined` to `null` → MongoDB rejects `$regex: null` → 500 crash | TC-DIAG-001 | 500 | 200 with filtered results |
+| BUG-008 | ✅ Fixed | `cartController.js:186-196` | `removeProductFromCart` "product not in cart" path sent `res.status(404)` then **fell through** and called `res.json(cart)` — double-response. Fixed by adding `return` before the 404. | TC-DIAG-005 | 404 only | 404 only |
+| BUG-009 | Open | `orderController.js:99-101` | `updateOrderStatus` returns `204` (No Content) instead of `404` when order is not found | TC-DIAG-006 | 204 | 404 |
+| BUG-010 | Open | `userRoutes.js:73-79` | `DELETE /users/:id` chains `userIdValidation` but never calls `validate` → invalid ObjectId bypasses check → CastError → 500 | TC-DIAG-003 | 500 | 422 |
+| BUG-011 | Open | `cartRoutes.js:135` | `DELETE /carts/:id` chains `cartIdValidation` but never calls `validate` → same CastError path → 500 | TC-DIAG-004 | 500 | 422 |
+| BUG-012 | ✅ Fixed | `authController.js` | `login` called `generateToken(userExist._id, userExist.name, …)` but User schema has `displayName` not `name`, so the JWT payload had no `name`. Fixed to pass `userExist.displayName`. | TC-DIAG-002 | `name` = user's displayName | `name` = user's displayName |
+| BUG-013 | Open | `userController.js:96-111` | `createUser` does not check for duplicate email before `User.create()` → Mongoose unique index throws → caught → 500 (unlike `register` which checks first) | TC-DIAG-013 | 500 | 400 or 409 |
 
 ### Additional Security Gaps (not bugs, but documented)
 
