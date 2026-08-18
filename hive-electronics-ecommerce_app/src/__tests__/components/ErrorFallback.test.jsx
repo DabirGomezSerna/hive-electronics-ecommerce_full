@@ -83,6 +83,62 @@ describe('ErrorFallback — component', () => {
 
     Object.defineProperty(window, 'location', { value: originalLocation, writable: true });
   });
+
+  // Regression: a failed React.lazy() import is cached on that lazy()
+  // instance forever, so resetErrorBoundary() alone just re-renders the same
+  // lazy component, which immediately re-throws the same cached rejection —
+  // observed locally as "Try again" doing nothing after unblocking a chunk
+  // request. Only a full reload re-fetches the chunk.
+  describe('chunk-load failure — "Try again" reloads instead of resetting', () => {
+    let reloadSpy;
+    let originalLocation;
+
+    beforeEach(() => {
+      reloadSpy = vi.fn();
+      originalLocation = window.location;
+      Object.defineProperty(window, 'location', {
+        value: { ...originalLocation, reload: reloadSpy },
+        writable: true,
+      });
+    });
+
+    afterEach(() => {
+      Object.defineProperty(window, 'location', { value: originalLocation, writable: true });
+    });
+
+    it('TC-UNIT-FE-EF-010 — reloads instead of calling resetErrorBoundary when error.name is "ChunkLoadError"', () => {
+      const resetErrorBoundary = vi.fn();
+      const chunkError = new Error('Loading chunk 10 failed.');
+      chunkError.name = 'ChunkLoadError';
+
+      render(<ErrorFallback error={chunkError} resetErrorBoundary={resetErrorBoundary} />);
+      fireEvent.click(screen.getByText('Try again'));
+
+      expect(reloadSpy).toHaveBeenCalledTimes(1);
+      expect(resetErrorBoundary).not.toHaveBeenCalled();
+    });
+
+    it('TC-UNIT-FE-EF-011 — reloads for a native "failed to fetch dynamically imported module" message even without a matching error name', () => {
+      const resetErrorBoundary = vi.fn();
+      const nativeImportError = new TypeError('Failed to fetch dynamically imported module: /static/js/1.chunk.js');
+
+      render(<ErrorFallback error={nativeImportError} resetErrorBoundary={resetErrorBoundary} />);
+      fireEvent.click(screen.getByText('Try again'));
+
+      expect(reloadSpy).toHaveBeenCalledTimes(1);
+      expect(resetErrorBoundary).not.toHaveBeenCalled();
+    });
+
+    it('TC-UNIT-FE-EF-012 — an ordinary render error still calls resetErrorBoundary, not reload', () => {
+      const resetErrorBoundary = vi.fn();
+
+      render(<ErrorFallback error={new Error('boom')} resetErrorBoundary={resetErrorBoundary} />);
+      fireEvent.click(screen.getByText('Try again'));
+
+      expect(resetErrorBoundary).toHaveBeenCalledTimes(1);
+      expect(reloadSpy).not.toHaveBeenCalled();
+    });
+  });
 });
 
 describe('ErrorFallback — wired into react-error-boundary', () => {
