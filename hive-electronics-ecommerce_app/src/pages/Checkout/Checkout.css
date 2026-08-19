@@ -60,6 +60,14 @@
   width: 100%;
 }
 
+/* Section-scoped errors sit inline above a form or the confirm button, so they
+   drop the full-page padding the default .error-message carries. */
+.checkout-error-inline {
+  padding: var(--gap, 16px);
+  margin-bottom: var(--gap, 16px);
+  text-align: left;
+}
+
 @media (max-width: 1024px) {
   .checkout-container {
     flex-direction: column;

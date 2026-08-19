@@ -596,4 +596,46 @@ describe('Checkout — API error-catch branches', () => {
     await waitFor(() => expect(createPaymentMethod).toHaveBeenCalled());
     expect(screen.getByTestId('payment-form')).toBeInTheDocument();
   });
+
+  // Regression guard for FRONTEND-006: a failed payment save used to set the
+  // page-level `error` state, which Checkout renders in a top-level ternary —
+  // unmounting the whole page, form and all, with no way to retry.
+  it('TC-UNIT-FE-CHECKOUT-034 — handlePaymentSubmit: create failure reports the error without unmounting checkout', async () => {
+    createPaymentMethod.mockRejectedValue(new Error('Payment API error'));
+
+    renderCheckout();
+    await openPaySection();
+    fireEvent.click(screen.getByText('add-payment'));
+    fireEvent.click(screen.getByText('submit-pm-form'));
+
+    await waitFor(() => expect(createPaymentMethod).toHaveBeenCalled());
+
+    // The failure is reported to the user...
+    await waitFor(() => {
+      expect(screen.getByTestId('error-msg')).toHaveTextContent(
+        'Failed to save payment method. Please try again.'
+      );
+    });
+
+    // ...and the rest of checkout survives, so the order can still be placed.
+    expect(screen.getByTestId('payment-form')).toBeInTheDocument();
+    expect(screen.getByTestId('cart-view')).toBeInTheDocument();
+    expect(screen.getByTestId('confirm-payment-btn')).toBeInTheDocument();
+  });
+
+  it('TC-UNIT-FE-CHECKOUT-035 — handlePaymentSubmit: the error clears when the form is cancelled', async () => {
+    createPaymentMethod.mockRejectedValue(new Error('Payment API error'));
+
+    renderCheckout();
+    await openPaySection();
+    fireEvent.click(screen.getByText('add-payment'));
+    fireEvent.click(screen.getByText('submit-pm-form'));
+
+    await waitFor(() => expect(screen.getByTestId('error-msg')).toBeInTheDocument());
+
+    fireEvent.click(screen.getByText('cancel-pm-form'));
+
+    expect(screen.queryByTestId('error-msg')).not.toBeInTheDocument();
+    expect(screen.getByTestId('payment-list')).toBeInTheDocument();
+  });
 });

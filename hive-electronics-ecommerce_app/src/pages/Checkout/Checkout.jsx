@@ -60,7 +60,12 @@ export default function Checkout() {
   const [paymentMethods, setPaymentMethods] = useState([]);
 
   const [loading, setLoading] = useState(false);
+  // `error` is page-fatal only: the initial load failed and there is nothing to
+  // render. Recoverable failures belong to the section that caused them, so
+  // they never unmount the rest of checkout.
   const [error, setError] = useState(null);
+  const [paymentError, setPaymentError] = useState(null);
+  const [orderError, setOrderError] = useState(null);
 
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
@@ -211,6 +216,7 @@ export default function Checkout() {
   const handlePaymentToggle = () => {
     setShowPaymentForm(false);
     setEditingPaymentMethod(null);
+    setPaymentError(null);
     setPaymentSectionOpen((prev) => !prev);
   };
 
@@ -218,18 +224,21 @@ export default function Checkout() {
     setSelectedPaymentMethod(method);
     setShowPaymentForm(false);
     setEditingPaymentMethod(null);
+    setPaymentError(null);
     setPaymentSectionOpen(false);
   };
 
   const handlePaymentNew = () => {
     setShowPaymentForm(true);
     setEditingPaymentMethod(null);
+    setPaymentError(null);
     setPaymentSectionOpen(true);
   };
 
   const handlePaymentEdit = (method) => {
     setShowPaymentForm(true);
     setEditingPaymentMethod(method);
+    setPaymentError(null);
     setPaymentSectionOpen(true);
   };
 
@@ -253,7 +262,7 @@ export default function Checkout() {
 
   const handlePaymentSubmit = async (formData) => {
     try {
-      setError(null);
+      setPaymentError(null);
       let saved;
       let updatedMethods;
       let newSelected = selectedPaymentMethod;
@@ -280,13 +289,16 @@ export default function Checkout() {
     } catch (err) {
       // Never log formData here — it can carry card number and CVV.
       logger.error("Checkout: failed to save payment method", { error: err });
-      setError("Failed to save payment method. Please try again.");
+      // Scoped to the payment section so the form stays mounted with the
+      // values the user typed, and the rest of checkout is untouched.
+      setPaymentError("Failed to save payment method. Please try again.");
     }
   };
 
   const handleCancelPaymentForm = () => {
     setShowPaymentForm(false);
     setEditingPaymentMethod(null);
+    setPaymentError(null);
     setPaymentSectionOpen(true);
   };
 
@@ -315,6 +327,7 @@ export default function Checkout() {
     }
 
     try {
+      setOrderError(null);
       const user = getCurrentUser();
       const apiResponse = await createOrder({
         user: user.userId,
@@ -351,7 +364,9 @@ export default function Checkout() {
       clearCart();
     } catch (err) {
       logger.error("Checkout: failed to create order", { error: err });
-      setError("Failed to place order. Please try again.");
+      // Shown next to the confirm button — the cart, address, and payment
+      // selections all survive so the user can simply retry.
+      setOrderError("Failed to place order. Please try again.");
     }
   };
 
@@ -414,6 +429,11 @@ export default function Checkout() {
           isExpanded={showPaymentForm || paymentSectionOpen || !selectedPaymentMethod}
           onToggle={handlePaymentToggle}
         >
+          {paymentError && (
+            <ErrorMessage className="error-message checkout-error-inline">
+              {paymentError}
+            </ErrorMessage>
+          )}
           {!showPaymentForm && !editingPaymentMethod ? (
             <PaymentMethodList
               methods={paymentMethods}
@@ -479,6 +499,11 @@ export default function Checkout() {
                 ).toLocaleDateString()}
               </p>
             </div>
+            {orderError && (
+              <ErrorMessage className="error-message checkout-error-inline">
+                {orderError}
+              </ErrorMessage>
+            )}
             <Button
               className="play-button"
               disabled={
