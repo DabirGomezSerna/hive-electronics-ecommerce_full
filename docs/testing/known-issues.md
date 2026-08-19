@@ -4,7 +4,7 @@
 
 Issues are organized by severity. Each entry includes the test ID that documents current behavior so regressions are caught the moment a fix lands.
 
-Every entry below was re-verified against `main` on 2026-08-18 (commit `bfd20ab`). Open counts as of that pass: **7 backend bugs**, **1 security gap**, **3 frontend issues**.
+Every entry below was re-verified against `main` on 2026-08-18. Open counts as of the latest pass: **7 backend bugs**, **1 security gap**, **2 frontend issues** (REACT19-001, E2E-001).
 
 ---
 
@@ -225,17 +225,16 @@ Every entry below was re-verified against `main` on 2026-08-18 (commit `bfd20ab`
 
 ---
 
-### FRONTEND-006 — HIGH — A recoverable Checkout error unmounts the entire checkout page
+### FRONTEND-006 — ✅ RESOLVED — A recoverable Checkout error no longer unmounts the checkout page
 
 | Field | Value |
 |---|---|
-| **Location** | `src/pages/Checkout/Checkout.jsx` — top-level `error ? <ErrorMessage>{error}</ErrorMessage> : (...)` ternary, combined with the `setError` calls in `handlePaymentSubmit` and `handleAddressSubmit` |
-| **Documenting test** | TC-UNIT-FE-CHECKOUT-033 — **currently failing** |
-| **Current behavior** | `handlePaymentSubmit`'s catch calls `setError("Failed to save payment method. Please try again.")`. Because `error` is checked in a top-level ternary, setting it replaces the whole page — the cart summary, the selected address, and the payment form all unmount, leaving only the error text. The user cannot correct the form and retry; there is no control to clear `error`. |
-| **Expected behavior** | A failed save shows the error next to the form and leaves the form open with its values, as TC-UNIT-FE-CHECKOUT-033 asserts. The page-level error branch should be reserved for failures that make the whole page unusable (e.g. the initial data load). |
-| **Root cause** | Regression from `74ef5c9` (frontend logger work). Before that commit the catch was `console.error("Failed to save payment method:", err)` with no state change, so the form stayed open and the test passed. The commit replaced it with `logger.error(...)` **plus** a `setError(...)`, which routes a form-level failure into a page-level error slot. |
-| **Impact** | CI is red on `main` — the `frontend-unit` job runs `npm run test:unit`, which fails on this test. In the browser, a transient payment-save failure loses the customer's checkout progress. |
-| **Fix** | Track form-level failures in state separate from the page-level `error` (e.g. `formError`), render it inside the payment/address section, and leave the page-level branch for load failures. |
+| **Location** | `src/pages/Checkout/Checkout.jsx` |
+| **Documenting tests** | TC-UNIT-FE-CHECKOUT-033 (form stays open), TC-UNIT-FE-CHECKOUT-034 (error reported, page survives), TC-UNIT-FE-CHECKOUT-035 (error clears on cancel) |
+| **Original behavior** | `handlePaymentSubmit`'s catch called `setError(...)`. Because `error` is checked in a top-level ternary, setting it replaced the whole page — the cart summary, the selected address, and the payment form all unmounted, leaving only the error text with no control to clear it. |
+| **Root cause** | Regression from `74ef5c9` (frontend logger work). Before that commit the catch was `console.error("Failed to save payment method:", err)` with no state change, so the form stayed open. The commit replaced it with `logger.error(...)` **plus** a `setError(...)`, routing a form-level failure into a page-level error slot. |
+| **Resolution** | Error state is now scoped to the failure's blast radius. `error` is page-fatal only (the initial `loadData` failure, where there is genuinely nothing to render). Two new states carry recoverable failures: `paymentError`, rendered inside the payment section above the form, and `orderError`, rendered next to the Confirm payment button. `paymentError` is cleared when the payment form is opened, cancelled, toggled, or resubmitted, so a stale message never lingers. `orderError` is cleared at the start of each order attempt. |
+| **Verification** | The three documenting tests fail against the pre-fix component and pass after. Full frontend suite: 374 passed, 2 todo, 41/41 files. Production build succeeds. |
 
 ---
 
@@ -279,11 +278,11 @@ Every entry below was re-verified against `main` on 2026-08-18 (commit `bfd20ab`
 |---|---|---|---|
 | TD-001 | Frontend | ✅ RESOLVED — Auth rewrite complete; frontend now uses real JWT via real API | — |
 | TD-002 | Frontend | ✅ RESOLVED — service specs pass against the `apiClient` layer; see FRONTEND-004 | — |
-| TD-003 | Frontend | Coverage thresholds set at 30%/30%/20%/30% — far below aspirational 75%; pages and layout are now partly covered (41 spec files, 374 cases) but thresholds are unchanged | High (raise thresholds as coverage grows) |
+| TD-003 | Frontend | Coverage thresholds set at 30%/30%/20%/30% — far below aspirational 75%; pages and layout are now partly covered (41 spec files, 376 cases) but thresholds are unchanged | High (raise thresholds as coverage grows) |
 | TD-004 | Backend | No controller-level unit tests — only model schema + middleware | Medium (mock Mongoose models) |
 | TD-005 | Backend | 7 open bugs documented (BUG-005, 006, 007, 009, 010, 011, 013) — the other 6 are resolved | High |
 | TD-006 | Backend | SEC-001 open security gap — unauthenticated user creation, now reachable on the deployed API | Low-Medium (add middleware) |
 | TD-007 | Backend | ✅ RESOLVED — SEC-002 endpoint added (`GET /api/addresses/user/:id`) | — |
 | TD-008 | Both | No contract validation between API shape and frontend consumption | Medium (add Zod schemas) |
-| TD-009 | CI | `main` is red — the `frontend-unit` job fails on TC-UNIT-FE-CHECKOUT-033; see FRONTEND-006 | Low (fix FRONTEND-006) |
+| TD-009 | CI | ✅ RESOLVED — `frontend-unit` passes again; FRONTEND-006 fixed | — |
 | TD-010 | CI | The `e2e` job starts only the frontend, so E2E specs run without an API or database; see E2E-001 | Medium (add Mongo service + API startup) |
