@@ -121,7 +121,7 @@ Cypress tests now run against the real API. The frontend calls `localhost:4000/a
 
 | Command | Current behavior | Required behavior |
 |---|---|---|
-| `cy.loginBySession(email?)` | Seeds `authToken = btoa("email:timestamp")` + `userData` (JSON) | **Must be updated** — see FRONTEND-005. Seed a valid JWT string + `userData: { userId, displayName, role, email }` |
+| `cy.loginBySession(email?)` | Seeds a three-segment JWT-shaped `authToken` (`headerB64.payloadB64.cypress-test-signature`, payload `{ userId, name, role, iat, exp }`) + `userData` keyed by `userId` | Compatible — FRONTEND-005 resolved. Caveat: the hardcoded ObjectIds in `TEST_USERS` are not created by `npm run seed`. |
 | `cy.addProductToCart(product?)` | Writes `cart` (JSON array) to localStorage | Compatible — CartContext reads from localStorage |
 | `cy.clearCart()` | Removes `cart` key | Compatible |
 | `cy.logoutSession()` | Removes `authToken` + `userData` | Compatible |

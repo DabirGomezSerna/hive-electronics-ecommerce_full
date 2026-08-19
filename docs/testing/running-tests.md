@@ -156,7 +156,7 @@ npm start
 npm run test:e2e
 ```
 
-> **Note:** Cypress tests are currently blocked by FRONTEND-005 (`cy.loginBySession` seeds an invalid token format). Auth-gated specs will fail until that command is updated. See [`known-issues.md`](known-issues.md).
+> **Note:** FRONTEND-005 is resolved — `cy.loginBySession` now seeds a valid JWT-shaped token. Specs that perform a **real** login still fail against a freshly seeded database, because the Cypress fixtures use `john@email.com` / `john123` while `npm run seed` creates `john.doe@example.com` / `Customer1234!`. See [`known-issues.md`](known-issues.md).
 
 ### Open Cypress interactive runner
 
@@ -250,7 +250,7 @@ The CRA dev server must be running before launching Cypress. Start it with `npm 
 
 ### Cypress auth-gated tests fail immediately
 
-`cy.loginBySession()` seeds an incompatible token format — see FRONTEND-005 in [`known-issues.md`](known-issues.md). Update `cypress/support/commands.js` to seed a valid JWT shape or call the real login API.
+The token format issue (FRONTEND-005) is fixed — `cy.loginBySession()` seeds a valid JWT shape. If auth-gated specs still fail, check that the API on `:4000` and MongoDB are both running, and that the accounts the specs use exist in the database: `cypress/fixtures/users.json` and the `TEST_USERS` map in `cypress/support/commands.js` reference `john@email.com` / `jane@email.com` with hardcoded ObjectIds, which `npm run seed` does not create. Either add those accounts to `scripts/seed.js` or repoint the fixtures at the seeded ones.
 
 ### Backend tests timeout
 

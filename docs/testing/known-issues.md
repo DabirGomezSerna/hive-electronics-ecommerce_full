@@ -1,23 +1,23 @@
 # Known Issues — Hive Electronics Ecommerce
 
-**Last updated:** 2026-07-08
+**Last updated:** 2026-08-18
 
 Issues are organized by severity. Each entry includes the test ID that documents current behavior so regressions are caught the moment a fix lands.
+
+Every entry below was re-verified against `main` on 2026-08-18 (commit `bfd20ab`). Open counts as of that pass: **7 backend bugs**, **1 security gap**, **3 frontend issues**.
 
 ---
 
 ## Backend bugs
 
-### BUG-001 — CRITICAL — `GET /api/orders` crashes with TypeError
+### BUG-001 — ✅ RESOLVED — `GET /api/orders` no longer crashes with TypeError
 
 | Field | Value |
 |---|---|
-| **Location** | `src/controllers/orderController.js:7–9` |
-| **Documenting test** | TC-INT-ORD-001 (asserts `status: 500`) |
-| **Current behavior** | `Order.find()` is awaited, then `.populate()` is chained on the resulting **array**. Arrays have no `.populate()` method. Throws `TypeError: orders.populate is not a function`. |
-| **Expected behavior** | `200` with array of orders. |
-| **Fix** | Chain `.populate()` on the Mongoose **query** before `await`: `const orders = await Order.find().populate(...)` |
-| **Impact** | Admin cannot list any orders. Order management is completely broken for admins. |
+| **Location** | `src/controllers/orderController.js:5–17` |
+| **Documenting test** | TC-INT-ORD-001 — must be updated to assert `status: 200` and an array body |
+| **Resolved in** | `2ef03cb` / `692e89d` |
+| **Resolution** | `.populate()` is now chained on the Mongoose **query** before the `await`, not on the resolved array: `const orders = await Order.find().populate("user").populate("products.product").populate("address").populate("paymentMethod")`. Admin order listing works. |
 
 ---
 
@@ -41,15 +41,14 @@ Issues are organized by severity. Each entry includes the test ID that documents
 
 ---
 
-### BUG-004 — HIGH — `GET /api/payment-methods/:id` crashes for non-existent ID
+### BUG-004 — ✅ RESOLVED — `GET /api/payment-methods/:id` returns 404 for non-existent ID
 
 | Field | Value |
 |---|---|
-| **Location** | `src/controllers/paymentMethodController.js:17–19` |
-| **Documenting test** | TC-INT-PAY-005 (asserts `status: 500`) |
-| **Current behavior** | `.populate("user")` is called on the result of `findById()` before checking for `null`. When the record doesn't exist, `null.populate()` throws. |
-| **Expected behavior** | `404` with `{ message: "Payment method not found" }`. |
-| **Fix** | Check `if (!paymentMethod)` before calling `.populate()`, or use `findById().populate()` directly in the query. |
+| **Location** | `src/controllers/paymentMethodController.js` — `getPaymentMethodById` |
+| **Documenting test** | TC-INT-PAY-005 — must be updated to assert `status: 404` |
+| **Resolved in** | `2ef03cb` / `692e89d` |
+| **Resolution** | The `if (!paymentMethod)` null check now runs **before** `await paymentMethod.populate("user")`, so a missing record returns `404 { message: "Payment method not found" }` instead of throwing. The query also now applies `.select("-cvv")`, so the CVV is never returned in the response. |
 
 ---
 
@@ -69,36 +68,35 @@ Issues are organized by severity. Each entry includes the test ID that documents
 
 | Field | Value |
 |---|---|
-| **Location** | `src/controllers/cartController.js` |
+| **Location** | `src/controllers/cartController.js` — `removeProductFromCart` |
 | **Documenting test** | TC-INT-CART-013 (asserts quantity decrements by 1 regardless) |
-| **Current behavior** | Controller always uses `quantity -= 1` instead of `quantity -= req.body.quantity`. |
+| **Current behavior** | `quantity` **is** destructured from the request body (`const { userId, productId, quantity = 1 } = req.body`) but is never used. The decrement branch is hardcoded: `cart.products[i].quantity === 1 ? splice(...) : (cart.products[i].quantity -= 1)`. Removing 3 of an item removes 1. |
 | **Expected behavior** | Decrements by the quantity in the request body. |
-| **Fix** | Replace `existingProduct.quantity -= 1` with `existingProduct.quantity -= (req.body.quantity || 1)`. |
+| **Fix** | Use the already-destructured `quantity` in the decrement, and guard the splice on `existing.quantity <= quantity` rather than `=== 1`. |
 
 ---
 
-### BUG-007 — CRITICAL — `GET /api/users/search` crashes when `email` or `role` param used without `q`
+### BUG-007 — CRITICAL — `GET /api/users/search` ignores `email` and `role`, and crashes when either is used without `q`
 
 | Field | Value |
 |---|---|
-| **Location** | `src/controllers/userController.js:44–56` |
+| **Location** | `src/controllers/userController.js` — `searchUsers`, the three `if` blocks |
 | **Documenting test** | TC-DIAG-001 (asserts `status: 500` or wrong count) |
-| **Current behavior** | When `email` or `role` is provided without `q`, the controller builds `{ $regex: undefined }` in the query. MongoDB rejects `$regex: null` with an error → 500. |
-| **Expected behavior** | `200` with users filtered by the provided parameter. |
-| **Fix** | Separate each filter into its own branch: `if (email) filters.email = { $regex: email, $options: 'i' }` etc., independent of `q`. |
+| **Current behavior** | All three branches (`if (q)`, `if (email)`, `if (role)`) assign an **identical** `$or` built from `q`, and each overwrites the previous one. Two consequences: (1) `email` and `role` are never used as filters at all — passing `?role=admin` returns a `q`-based search, not admins; (2) when `email` or `role` is supplied without `q`, the query becomes `{ $regex: undefined }`, which MongoDB rejects → 500. A third, separate defect is that every branch matches on a `name` field, but the User schema has no `name` — the field is `displayName`, so that half of the `$or` can never match. |
+| **Expected behavior** | `200` with users filtered by whichever parameters were supplied. |
+| **Fix** | Give each parameter its own independent filter, and match on `displayName` rather than `name`: `if (q) filters.$or = [{ displayName: { $regex: q, $options: "i" } }, { email: { $regex: q, $options: "i" } }]; if (email) filters.email = { $regex: email, $options: "i" }; if (role) filters.role = role;` |
 
 ---
 
-### BUG-008 — CRITICAL — `removeProductFromCart` sends double response
+### BUG-008 — ✅ RESOLVED — `removeProductFromCart` no longer sends a double response
 
 | Field | Value |
 |---|---|
-| **Location** | `src/controllers/cartController.js:186–196` |
-| **Documenting test** | TC-DIAG-005 (asserts `status: 404`) |
-| **Current behavior** | When product is not found in cart, the controller calls `res.status(404).json(...)` but does NOT `return`. Execution continues: `cart.save()` runs and then `res.json(cart)` is called — two responses sent on the same request. |
-| **Expected behavior** | 404 response only; no subsequent save or second response. |
-| **Fix** | Add `return` before `res.status(404).json(...)` in the not-found branch. |
-| **Risk** | Node.js logs "Cannot set headers after they are sent" in production. |
+| **Location** | `src/controllers/cartController.js` — `removeProductFromCart`, the not-found branch |
+| **Documenting test** | TC-DIAG-005 (asserts `status: 404`) — still valid |
+| **Resolved in** | `2ef03cb` / `692e89d` |
+| **Resolution** | The branch is now `return res.status(404).json({ message: "Product not found in cart" })`. Execution stops, so `cart.save()` and the second `res.json(cart)` no longer run. |
+| **Note** | `src/middleware/errorHandler.js` now also guards this class of fault generally — if `res.headersSent` is true it delegates to Express's default handler rather than throwing `ERR_HTTP_HEADERS_SENT`. |
 
 ---
 
@@ -168,9 +166,10 @@ Issues are organized by severity. Each entry includes the test ID that documents
 |---|---|
 | **Location** | `src/routes/userRoutes.js:63` |
 | **Documenting test** | TC-INT-USR-012, TC-INT-USR-013 |
-| **Current behavior** | Anyone (unauthenticated) can `POST /api/users` and create a user with any role, including `admin`. |
+| **Current behavior** | Anyone (unauthenticated) can `POST /api/users` and create a user with any role, including `admin`. The route is `router.post("/users", createUserValidation, validate, createUser)` — no `authMiddleware`, no `isAdmin`. |
 | **Expected behavior** | Creating users should require authentication; creating admin users should require admin role. |
-| **Recommendation** | Add `authMiddleware` and `isAdmin` middleware to the `POST /api/users` route. The public registration endpoint (`POST /api/register`) already exists for self-signup. |
+| **Recommendation** | Add `authMiddleware` and `isAdmin` middleware to the `POST /api/users` route. The public registration endpoint (`POST /api/register`) already exists for self-signup, and it hardcodes `role = "customer"`, so closing this route does not affect signup. |
+| **Severity note (2026-08-18)** | Impact is higher than when this was first written: the API is now publicly deployed on Render, so this is a reachable privilege-escalation path against the live service, not just a local one. |
 
 ---
 
@@ -203,18 +202,17 @@ Issues are organized by severity. Each entry includes the test ID that documents
 |---|---|
 | **Resolved in** | Frontend-backend connection work |
 | **Resolution** | `userServices.js` now calls the real `/api/login` endpoint via `apiClient`. JWT is decoded from the response and stored in localStorage. All service files (`productServices`, `categoryServices`, `shippingServices`, `paymentServices`, `orderServices`) now use `apiClient` against the real backend. |
-| **Remaining work** | Frontend unit tests for `userServices` and `productServices` still test the old behavior and are now broken — see FRONTEND-004. Cypress auth seeding still uses `btoa` — see FRONTEND-005. |
+| **Remaining work** | None. Both follow-ups are closed: the `userServices` / `productServices` specs were migrated (FRONTEND-004) and Cypress auth seeding now injects a valid JWT shape (FRONTEND-005). |
 
 ---
 
-### FRONTEND-002 — `Header.jsx` event listener memory leak
+### FRONTEND-002 — ✅ RESOLVED — `Header.jsx` event listener is cleaned up
 
 | Field | Value |
 |---|---|
-| **Location** | `src/layout/Header/Header.jsx` (cleanup `useEffect`) |
-| **Description** | The cleanup function in the `useEffect` that handles click-outside behavior calls `document.addEventListener` instead of `document.removeEventListener`. The event listener is never removed on unmount. |
-| **Impact** | Memory leak in long-running sessions; stale listeners may trigger unexpected behavior after navigation. |
-| **Test coverage** | No test covers this — it would require an E2E test or a complex RTL test with manual DOM event simulation. |
+| **Location** | `src/layout/Header/Header.jsx:29,33` |
+| **Resolved in** | Verified against current code on 2026-08-18 — no single commit isolates the change. |
+| **Resolution** | The file now registers exactly one listener, `window.addEventListener("storage", updateAuthState)`, and its cleanup returns `window.removeEventListener("storage", updateAuthState)` — a matched pair. The `document.addEventListener` click-outside effect this entry described is not present in the current component. |
 
 ---
 
@@ -227,27 +225,42 @@ Issues are organized by severity. Each entry includes the test ID that documents
 
 ---
 
-### E2E-001 — Cypress E2E tests not verified in CI (and auth seeding broken)
+### FRONTEND-006 — HIGH — A recoverable Checkout error unmounts the entire checkout page
+
+| Field | Value |
+|---|---|
+| **Location** | `src/pages/Checkout/Checkout.jsx` — top-level `error ? <ErrorMessage>{error}</ErrorMessage> : (...)` ternary, combined with the `setError` calls in `handlePaymentSubmit` and `handleAddressSubmit` |
+| **Documenting test** | TC-UNIT-FE-CHECKOUT-033 — **currently failing** |
+| **Current behavior** | `handlePaymentSubmit`'s catch calls `setError("Failed to save payment method. Please try again.")`. Because `error` is checked in a top-level ternary, setting it replaces the whole page — the cart summary, the selected address, and the payment form all unmount, leaving only the error text. The user cannot correct the form and retry; there is no control to clear `error`. |
+| **Expected behavior** | A failed save shows the error next to the form and leaves the form open with its values, as TC-UNIT-FE-CHECKOUT-033 asserts. The page-level error branch should be reserved for failures that make the whole page unusable (e.g. the initial data load). |
+| **Root cause** | Regression from `74ef5c9` (frontend logger work). Before that commit the catch was `console.error("Failed to save payment method:", err)` with no state change, so the form stayed open and the test passed. The commit replaced it with `logger.error(...)` **plus** a `setError(...)`, which routes a form-level failure into a page-level error slot. |
+| **Impact** | CI is red on `main` — the `frontend-unit` job runs `npm run test:unit`, which fails on this test. In the browser, a transient payment-save failure loses the customer's checkout progress. |
+| **Fix** | Track form-level failures in state separate from the page-level `error` (e.g. `formError`), render it inside the payment/address section, and leave the page-level branch for load failures. |
+
+---
+
+### E2E-001 — Cypress E2E tests not verified against a full stack in CI
 
 | Field | Value |
 |---|---|
 | **Affected tests** | All 25 Cypress tests (TC-E2E-AUTH-*, TC-E2E-CART-*, TC-E2E-CHECKOUT-*) |
-| **Status** | Tests written and reviewed; not yet run in an automated environment |
-| **Blocker 1** | CRA dev server (`npm start`) must be running at `localhost:3000` before Cypress can execute |
-| **Blocker 2** | API server (`node server.js` in `hive-electronics-ecommerce_api/`) must be running at `localhost:4000` + a real MongoDB connection — now that the frontend calls the real API, E2E tests require the full stack |
-| **Blocker 3** | `cy.loginBySession` seeds localStorage with a `btoa`-encoded token — see FRONTEND-005 |
-| **Resolution** | Fix FRONTEND-005 first, then add CI workflow that starts all three services |
+| **Status** | Partially addressed — a CI `e2e` job now exists in `.github/workflows/ci.yml` |
+| **Blocker 1** | ✅ Resolved — the CI job starts the CRA dev server in the background and gates on `npx wait-on http://localhost:3000 --timeout 90000`. |
+| **Blocker 2** | **Still open** — the `e2e` job starts *only* the frontend. No API server and no MongoDB are started, so every spec that performs a real request against `localhost:4000` has nothing to talk to. |
+| **Blocker 3** | ✅ Resolved — see FRONTEND-005; `cy.loginBySession` now seeds a valid JWT-shaped token. |
+| **Blocker 4** | **Newly identified 2026-08-18** — the Cypress test users do not exist in a seeded database. `cypress/fixtures/users.json` and the `TEST_USERS` map in `cypress/support/commands.js` use `john@email.com` / `john123` and `jane@email.com` / `jane123` with hardcoded ObjectIds (`67fc9bda370302bf46079352`, `…350`). `scripts/seed.js` creates `admin@hiveelectronics.com`, `john.doe@example.com`, and `jane.smith@example.com` with different passwords and freshly generated ObjectIds. Specs performing a real login (TC-E2E-AUTH-003, TC-E2E-AUTH-004) fail; specs using `cy.loginBySession` pass auth but reference a user ID with no carts, addresses, or orders behind it. |
+| **Resolution** | Add a MongoDB service container to the `e2e` job, start the API against it (seeded via `npm run seed`), and wait on `localhost:4000` alongside the existing wait on `localhost:3000`. Separately, reconcile Blocker 4 — either add the two Cypress accounts to `scripts/seed.js` with fixed ObjectIds, or repoint the fixtures and `TEST_USERS` at the seeded accounts. |
 
 ---
 
-### FRONTEND-004 — Frontend service tests broken (test removed behavior)
+### FRONTEND-004 — ✅ RESOLVED — Frontend service tests migrated to the real API layer
 
 | Field | Value |
 |---|---|
 | **Affected tests** | `src/__tests__/services/userServices.test.js`, `src/__tests__/services/productServices.test.js` |
-| **Root cause** | Both test files were written against the old simulated service layer (local JSON + `setTimeout` + `validUsers`). Since the connection work, these services now call `apiClient`, which calls `fetch()`. The tests still use `vi.useFakeTimers()` and `vi.runAllTimersAsync()` patterns that advance non-existent `setTimeout` delays, and assert credential behavior that no longer exists. |
-| **Current behavior** | Running `npm run test:unit` produces failures: `login('john@email.com', 'john123')` calls `fetch("undefined/login")` (because `REACT_APP_API_URL` is not set in tests), then throws a network error. All `login()` / `fetchProducts()` tests fail. |
-| **Fix** | Rewrite both test files to mock the `apiClient` module with `vi.mock('../../services/apiClient')`. Remove fake timer usage. See `testing-audit-connection.md` for migration plan. |
+| **Original problem** | Both files were written against the old simulated service layer (local JSON + `setTimeout` + `validUsers`) and still used `vi.useFakeTimers()` against `setTimeout` delays that no longer existed. |
+| **Resolved in** | Verified by running the suite on 2026-08-18. |
+| **Resolution** | Both files now pass. `vitest.setup.js` sets `REACT_APP_API_URL = 'http://localhost:4000/api'` before imports, so `apiClient` no longer builds a `fetch("undefined/login")` URL, and the service specs assert against the real `apiClient` contract. A full `npm run test:unit` run reports **371 passed, 2 todo**, with all 7 files in `src/__tests__/services/` green. |
 
 ---
 
@@ -265,10 +278,12 @@ Issues are organized by severity. Each entry includes the test ID that documents
 | ID | Area | Description | Effort |
 |---|---|---|---|
 | TD-001 | Frontend | ✅ RESOLVED — Auth rewrite complete; frontend now uses real JWT via real API | — |
-| TD-002 | Frontend | Service tests need `vi.mock('../../services/apiClient')` to intercept HTTP — fake timer pattern removed; apiClient.test.js needs fetch mock via `vi.stubGlobal` | Medium |
-| TD-003 | Frontend | Coverage thresholds set at 30%/30%/20%/30% — far below aspirational 75%; pages and layout have no unit tests | High (write tests for pages, layout, services) |
+| TD-002 | Frontend | ✅ RESOLVED — service specs pass against the `apiClient` layer; see FRONTEND-004 | — |
+| TD-003 | Frontend | Coverage thresholds set at 30%/30%/20%/30% — far below aspirational 75%; pages and layout are now partly covered (41 spec files, 374 cases) but thresholds are unchanged | High (raise thresholds as coverage grows) |
 | TD-004 | Backend | No controller-level unit tests — only model schema + middleware | Medium (mock Mongoose models) |
-| TD-005 | Backend | 13 open bugs documented — all critical or high priority | High |
-| TD-006 | Backend | SEC-001 open security gap — unauthenticated user creation | Low-Medium (add middleware) |
+| TD-005 | Backend | 7 open bugs documented (BUG-005, 006, 007, 009, 010, 011, 013) — the other 6 are resolved | High |
+| TD-006 | Backend | SEC-001 open security gap — unauthenticated user creation, now reachable on the deployed API | Low-Medium (add middleware) |
 | TD-007 | Backend | ✅ RESOLVED — SEC-002 endpoint added (`GET /api/addresses/user/:id`) | — |
 | TD-008 | Both | No contract validation between API shape and frontend consumption | Medium (add Zod schemas) |
+| TD-009 | CI | `main` is red — the `frontend-unit` job fails on TC-UNIT-FE-CHECKOUT-033; see FRONTEND-006 | Low (fix FRONTEND-006) |
+| TD-010 | CI | The `e2e` job starts only the frontend, so E2E specs run without an API or database; see E2E-001 | Medium (add Mongo service + API startup) |

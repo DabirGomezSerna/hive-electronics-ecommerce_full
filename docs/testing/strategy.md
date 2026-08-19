@@ -152,7 +152,12 @@ Cover:
 - Shopping cart (9 tests): empty state, product listing, add to cart, badge update, cart page, quantity controls, remove, clear, checkout navigation
 - Checkout (8 tests): unauthenticated redirect, address loading, order details, subtotal, confirm button state, order creation, confirmation page, add new address
 
-Cypress tests require **all three services running**: CRA dev server on `:3000`, API server on `:4000`, and a MongoDB instance. The `cy.loginBySession()` command currently seeds localStorage with a `btoa`-encoded token — this is incompatible with the real JWT auth and must be updated to seed a valid JWT + `userData`. See FRONTEND-005 in [`known-issues.md`](known-issues.md).
+Cypress tests require **all three services running**: CRA dev server on `:3000`, API server on `:4000`, and a MongoDB instance.
+
+`cy.loginBySession()` now seeds a structurally valid three-segment JWT (FRONTEND-005, resolved). Two constraints remain:
+
+- The `TEST_USERS` map and `cypress/fixtures/users.json` use `john@email.com` / `jane@email.com` with hardcoded ObjectIds. The API seed script creates different accounts (`john.doe@example.com`, `jane.smith@example.com`) with fresh ObjectIds, so specs that perform a **real** login fail against a freshly seeded database.
+- The CI `e2e` job starts only the dev server — no API, no MongoDB. See E2E-001 in [`known-issues.md`](known-issues.md).
 
 ---
 
@@ -197,8 +202,8 @@ The strategy is considered complete when:
 
 - [x] All 55 backend unit tests pass
 - [x] All 177 backend integration tests pass (including 15 bug-documenting tests that assert known broken behavior)
-- [ ] All frontend unit tests pass — service tests rewritten to mock `apiClient` (2 `it.todo` acknowledged as React 19 limitation)
-- [ ] All 25 Cypress E2E tests pass with full stack running (dev server + API + MongoDB) — blocked on FRONTEND-005
+- [ ] All frontend unit tests pass — service tests are rewritten to mock `apiClient` and now pass (2 `it.todo` acknowledged as React 19 limitation), but `TC-UNIT-FE-CHECKOUT-033` fails; see FRONTEND-006
+- [ ] All 31 Cypress E2E tests pass with full stack running (dev server + API + MongoDB) — FRONTEND-005 resolved; still blocked on the test-user/seed mismatch and on E2E-001 (CI runs no API or database)
 - [x] Every known bug has a test that fails when the bug is present
 - [x] No test shares mutable state with another test
 - [x] No test requires the production database

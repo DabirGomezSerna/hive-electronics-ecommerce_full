@@ -1,11 +1,13 @@
 # hive-electronics-ecommerce_full
 
-This workspace contains two independent projects:
+This repository contains two separately-installed projects:
 
 - `hive-electronics-ecommerce_api/` — Express + Mongoose backend (ESM, `"type": "module"`)
 - `hive-electronics-ecommerce_app/` — React 19 frontend (Create React App, `react-scripts`)
 
-There is no shared package, monorepo tooling, or git repository linking the two folders.
+Both are tracked in this single git repository (since commit `e4e2933`) and share one CI pipeline at `.github/workflows/ci.yml`. There is no shared package or monorepo tooling — each folder has its own `package.json` and its own `node_modules`, and dependencies are installed per folder.
+
+The frontend consumes the backend over HTTP. It reads its base URL from `REACT_APP_API_URL` and every call goes through `src/services/apiClient.js`.
 
 ---
 
@@ -15,8 +17,12 @@ There is no shared package, monorepo tooling, or git repository linking the two 
 
 ```
 src/
+├── app.js
 ├── config/
-│   └── db.conf.js
+│   ├── db.conf.js
+│   ├── logger.js
+│   ├── swagger.js
+│   └── swaggerComponents.js
 ├── controllers/
 │   ├── authController.js
 │   ├── cartController.js
@@ -28,7 +34,9 @@ src/
 │   └── userController.js
 ├── middleware/
 │   ├── authMiddleware.js
+│   ├── errorHandler.js
 │   ├── isAdminMiddleware.js
+│   ├── requestLogger.js
 │   └── validation.js
 ├── models/
 │   ├── Cart.js
@@ -49,6 +57,8 @@ src/
     ├── shippingAddressRoutes.js
     └── userRoutes.js
 ```
+
+`server.js` at the project root is the entry point: it loads dotenv, builds the app via `createApp()` from `src/app.js`, connects to MongoDB, listens on `process.env.PORT || 3000`, and registers SIGTERM/SIGINT/`unhandledRejection`/`uncaughtException` handlers for graceful shutdown. `src/app.js` exports the `createApp()` factory, which is what the integration tests import — they never start a listener.
 
 ### `hive-electronics-ecommerce_app/src/`
 
@@ -71,6 +81,13 @@ src/
 │   │   │   ├── AddressItem.jsx
 │   │   │   ├── AddressList.css
 │   │   │   └── AddressList.jsx
+│   │   ├── PaymentMethod/
+│   │   │   ├── PaymentMethodForm.css
+│   │   │   ├── PaymentMethodForm.jsx
+│   │   │   ├── PaymentMethodItem.css
+│   │   │   ├── PaymentMethodItem.jsx
+│   │   │   ├── PaymentMethodList.css
+│   │   │   └── PaymentMethodList.jsx
 │   │   └── SummarySection/
 │   │       ├── SummarySection.css
 │   │       └── SummarySection.jsx
@@ -86,6 +103,9 @@ src/
 │   ├── ProductDetails/
 │   │   ├── ProductDetails.css
 │   │   └── ProductDetails.jsx
+│   ├── SignupForm/
+│   │   ├── SignupForm.css
+│   │   └── SignupForm.jsx
 │   └── common/
 │       ├── Badge/
 │       │   ├── Badge.css
@@ -94,6 +114,11 @@ src/
 │       ├── Button/
 │       │   ├── Button.css
 │       │   ├── Button.jsx
+│       │   └── index.js
+│       ├── ErrorFallback/
+│       │   ├── ErrorFallback.css
+│       │   ├── ErrorFallback.jsx
+│       │   ├── RouteErrorBoundary.jsx
 │       │   └── index.js
 │       ├── ErrorMessage/
 │       │   ├── ErrorMessage.css
@@ -109,6 +134,8 @@ src/
 │       └── Loading/
 │           ├── Loading.css
 │           └── Loading.jsx
+├── config/
+│   └── pricing.js
 ├── context/
 │   └── CartContext.jsx
 ├── data/
@@ -148,21 +175,31 @@ src/
 │   │   ├── Order.css
 │   │   └── Order.jsx
 │   ├── Product.jsx
-│   └── ProtectedRoute.jsx
+│   ├── ProtectedRoute.jsx
+│   └── Signup/
+│       └── Signup.jsx
 ├── reportWebVitals.js
 ├── services/
+│   ├── apiClient.js
 │   ├── categoryServices.js
+│   ├── logger.js
+│   ├── orderServices.js
+│   ├── paymentServices.js
 │   ├── productServices.js
 │   ├── shippingServices.js
 │   └── userServices.js
 └── setupTests.js
 ```
 
+Unit and integration specs live outside this tree in `src/__tests__/` (41 files, mirroring `components/`, `pages/`, `services/`, `layout/`, `context/`). Cypress specs live in `cypress/e2e/`.
+
+The four files in `src/data/` are leftovers from the pre-API version of the app. Only `categories.json` is still imported by application code (`components/ProductDetails/ProductDetails.jsx`, as a category-name lookup fallback); `products.json`, `users.json`, and `shippingAddress.json` are unreferenced.
+
 ---
 
 ## 2. API route map
 
-Base mount: `server.js` registers `app.use("/api", routes)`, and `src/routes/index.js` mounts every route file with no extra prefix. Full paths below include the `/api` prefix.
+Base mount: `src/app.js` registers `app.use("/api", routes)`, and `src/routes/index.js` mounts every route file with no extra prefix. Full paths below include the `/api` prefix.
 
 `authMiddleware` = valid JWT required. `isAdmin` = `authMiddleware` **and** `req.user.role === "admin"`.
 
@@ -188,6 +225,7 @@ Base mount: `server.js` registers `app.use("/api", routes)`, and `src/routes/ind
 | PUT | `/api/categories/:id` | Yes | Yes | `categoryController.updateCategory` |
 | DELETE | `/api/categories/:id` | Yes | Yes | `categoryController.deleteCategory` |
 | GET | `/api/addresses` | Yes | Yes | `shippingAddressController.getShippingAddresses` |
+| GET | `/api/addresses/user/:id` | Yes | No | `shippingAddressController.getShippingAddressesByUser` |
 | GET | `/api/addresses/:id` | Yes | Yes | `shippingAddressController.getShippingAddressById` |
 | POST | `/api/addresses` | Yes | No | `shippingAddressController.createShippingAddress` |
 | PUT | `/api/addresses/:id` | Yes | No | `shippingAddressController.updateShippingAddress` |
@@ -214,7 +252,14 @@ Base mount: `server.js` registers `app.use("/api", routes)`, and `src/routes/ind
 
 Mount order in `src/routes/index.js`: `authRoutes`, `productRoutes`, `userRoutes`, `categoryRoutes`, `shippingAddressRoutes` (imported as `shippingRoutes`), `cartRoutes`, `paymentMethodRoutes`, `orderRoutes`.
 
-A catch-all 404 handler is registered in `server.js` after `/api` routes, returning `{ error, method, url }`.
+Both handlers are registered in `src/app.js` (not `server.js`) after the `/api` routes:
+
+- A catch-all 404 handler returning `{ error, method, url }`.
+- `middleware/errorHandler.js` as the final 4-argument error handler. It logs the failure with the request ID, delegates to Express's default handler when `res.headersSent` is already true, and otherwise responds `{ message, requestId }`. In production, 5xx messages are replaced with `"Internal server error"` so internal detail (Mongoose `CastError` paths, driver errors) is never exposed; 4xx messages pass through unchanged.
+
+Swagger UI is mounted at `/api-docs` (raw spec at `/api-docs.json`) when `process.env.NODE_ENV !== "production" || process.env.ENABLE_DOCS === "true"`.
+
+`middleware/requestLogger.js` runs before `express.json()`. It assigns `req.id` from an inbound `X-Request-Id` header or a fresh `randomUUID()`, echoes it on the response, and logs method, URL, status, duration, and `req.user?.userId` when the response finishes.
 
 ---
 
@@ -391,19 +436,24 @@ export { default } from './Button';
 
 ### Frontend — service pattern (`services/*.js`)
 
-Services import local JSON from `data/` and wrap synchronous lookups in a `Promise` + `setTimeout` to simulate network latency:
+Every service calls the real API through the shared `apiClient` module. No service reads from `data/`, and none simulates latency with `setTimeout`.
 
 ```js
-import products from '../data/products.json';
+import apiClient from './apiClient';
 
 export const fetchProducts = async () => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(products);
-    }, 2000);
-  });
+  return apiClient('/products');
 };
 ```
+
+`services/apiClient.js` is the single network chokepoint. It:
+
+- reads the base URL from `process.env.REACT_APP_API_URL`,
+- caches GET responses in an in-memory `Map` for 60 seconds (`GET_CACHE_TTL_MS`), cleared by the exported `clearApiCache()`,
+- sends `Content-Type: application/json` and, when `localStorage.authToken` exists, `Authorization: Bearer <token>`,
+- returns `null` for `204`,
+- on `401`, clears `authToken` / `refreshToken` / `userData` and redirects to `/login`,
+- throws an `ApiError` (exported class, carrying `status`, `path`, `method`, `body`) on network failure or a non-OK response.
 
 ### Frontend — data-fetch-in-component pattern
 
@@ -432,11 +482,37 @@ useEffect(() => {
 
 ### Frontend — global state pattern
 
-Single `CartContext` (`context/CartContext.jsx`) created with `createContext()`, exposed through a `CartProvider` and a `useCart()` hook that throws if used outside the provider. Cart state is initialized from and synced to `localStorage` via `useEffect`.
+`context/CartContext.jsx` creates **two** contexts and one provider:
+
+- `useCart()` — `{ cartItems, total, addToCart, removeFromCart, updateQuantity, clearCart, getTotalItems, getTotalPrice }`
+- `useCartActions()` — `{ addToCart }` only, so components that merely add to the cart do not re-render when its contents change
+
+Both hooks throw if used outside `CartProvider`.
+
+Persistence depends on auth state, decided by `getCurrentUser()`:
+
+- **Guest** — cart hydrates from and syncs to `localStorage` under the key `cart`.
+- **Authenticated** — cart loads from `GET /carts/user/:userId` and mutates through `POST /carts/addToCart`, `PUT /carts/:cartId`, and `DELETE /carts/:cartId`. Nothing is written to `localStorage` in this mode.
+
+`updateQuantity(id, n)` with `n <= 0` delegates to `removeFromCart`, and a `removeFromCart` that empties the list delegates to `clearCart`.
 
 ### Frontend — auth pattern
 
-`services/userServices.js` checks credentials against a hardcoded `validUsers` object, stores a `btoa(...)`-encoded fake token plus user JSON in `localStorage` (`authToken`, `userData`), and exposes `login`, `logout`, `getCurrentUser`, `isAuthenticated`. `pages/ProtectedRoute.jsx` wraps routes and redirects to `/login` via `<Navigate>` when `isAuthenticated()` is false.
+`services/userServices.js` posts credentials to the real `/login` endpoint. It decodes the returned JWT's payload with `JSON.parse(atob(token.split(".")[1]))` — no signature verification happens client-side — and writes three `localStorage` keys: `authToken` (the raw JWT), `refreshToken`, and `userData` (JSON of `{ userId, displayName, role, email, loginDate }`).
+
+It exposes `login`, `register`, `logout`, `getCurrentUser`, `isAuthenticated`. `login` and `register` never throw — they return `{ success: true, user }` or `{ success: false, error }`. `isAuthenticated()` is a presence check on `authToken` only; it does not check expiry.
+
+`pages/ProtectedRoute.jsx` wraps routes and redirects to `redirectTo` (default `/login`) via `<Navigate>` when `isAuthenticated()` is false. It also accepts an optional `allowedRoles` array and renders an inline "Access denied" message when the current user's role is not in it — neither usage in `App.jsx` passes that prop.
+
+### Frontend — error handling pattern
+
+Three layers, all logging through `services/logger.js`:
+
+- `index.js` wraps `<App />` in a `react-error-boundary` `<ErrorBoundary>` with `ErrorFallback`, passes `onCaughtError` / `onUncaughtError` / `onRecoverableError` to `createRoot`, and registers `window` listeners for `error` and `unhandledrejection`.
+- `App.jsx` wraps the route tree in `<RouteErrorBoundary>` (from `components/common/ErrorFallback`), inside `<Layout>` so the header and footer survive a route-level failure.
+- Components that fetch data hold `loading` / `error` state and render `Loading` / `ErrorMessage` / content, as in the data-fetch pattern above.
+
+`services/logger.js` is level-gated (`silent | error | warn | info | debug`) via `REACT_APP_LOG_LEVEL`, defaulting to `error` in production, `silent` under test, and `debug` otherwise. It exposes `setLogSink()` as a hook for a future remote sink; nothing is registered by default.
 
 ---
 
